@@ -5,7 +5,11 @@ import { User } from '../models/user.model.js';
 import { Category } from '../models/category.model.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const AI_BASE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000/api/v1';
+let rawAiUrl = (process.env.AI_SERVICE_URL || 'http://localhost:8000').trim();
+if (!rawAiUrl.endsWith('/api/v1')) {
+  rawAiUrl = rawAiUrl.replace(/\/+$/, '') + '/api/v1';
+}
+const AI_BASE_URL = rawAiUrl;
 const AI_API_KEY = process.env.AI_SERVICE_API_KEY || 'rentride_ai_internal_secret_key_2026';
 
 const aiClient = axios.create({

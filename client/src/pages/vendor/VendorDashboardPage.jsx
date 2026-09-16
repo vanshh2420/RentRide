@@ -69,6 +69,13 @@ export const VendorDashboardPage = ({ defaultWalkinOpen = false }) => {
 
   const activeTab = getActiveTabFromPath();
 
+  const handleCloseOfflineModal = () => {
+    setIsOfflineModalOpen(false);
+    if (location.pathname === '/vendor/walkin') {
+      navigate('/vendor/dashboard');
+    }
+  };
+
   useEffect(() => {
     if (location.pathname === '/vendor/walkin' || defaultWalkinOpen) {
       setIsOfflineModalOpen(true);
@@ -82,17 +89,32 @@ export const VendorDashboardPage = ({ defaultWalkinOpen = false }) => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [statsRes, bookingsRes, vehiclesRes, maintenanceRes] = await Promise.all([
+      const results = await Promise.allSettled([
         vendorApi.getVendorStats(),
         vendorApi.getVendorBookings({ status: bookingFilter, bookingType: typeFilter }),
         vehicleApi.getVendorVehicles(),
         maintenanceApi.getVendorMaintenance()
       ]);
 
-      setStats(statsRes.data);
-      setBookings(bookingsRes.data.bookings || []);
-      setVehicles(vehiclesRes.data.vehicles || []);
-      setMaintenanceRecords(maintenanceRes.data.maintenanceRecords || []);
+      const [statsRes, bookingsRes, vehiclesRes, maintenanceRes] = results;
+
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        setStats(statsRes.value.data);
+      } else {
+        console.warn('Vendor stats load skipped/unavailable');
+      }
+
+      if (bookingsRes.status === 'fulfilled' && bookingsRes.value?.data) {
+        setBookings(bookingsRes.value.data.bookings || []);
+      }
+
+      if (vehiclesRes.status === 'fulfilled' && vehiclesRes.value?.data) {
+        setVehicles(vehiclesRes.value.data.vehicles || []);
+      }
+
+      if (maintenanceRes.status === 'fulfilled' && maintenanceRes.value?.data) {
+        setMaintenanceRecords(maintenanceRes.value.data.maintenanceRecords || []);
+      }
     } catch (err) {
       console.error('Failed to load vendor dashboard', err);
     } finally {
@@ -778,10 +800,11 @@ export const VendorDashboardPage = ({ defaultWalkinOpen = false }) => {
       {/* Modals */}
       <CreateOfflineBookingModal
         isOpen={isOfflineModalOpen}
-        onClose={() => setIsOfflineModalOpen(false)}
+        onClose={handleCloseOfflineModal}
         vehicles={vehicles.filter((v) => v.status === 'AVAILABLE')}
         onSuccess={() => {
           fetchDashboardData();
+          handleCloseOfflineModal();
         }}
       />
 

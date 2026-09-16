@@ -52,8 +52,12 @@ api.interceptors.response.use(
       errors: error.response?.data?.errors || [],
     };
 
-    if (error.response?.status === 401) {
-      // Clear token if expired/invalid
+    const reqUrl = error.config?.url || '';
+    const isAuthRoute = reqUrl.includes('/auth/login') || reqUrl.includes('/auth/register');
+    const hadAuthHeader = Boolean(error.config?.headers?.Authorization);
+
+    if (error.response?.status === 401 && hadAuthHeader && !isAuthRoute) {
+      // Clear token only if an existing authenticated session token expired/invalidated
       localStorage.removeItem('rentride_token');
       localStorage.removeItem('rentride_user');
     }

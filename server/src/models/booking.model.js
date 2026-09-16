@@ -32,6 +32,12 @@ const bookingSchema = new mongoose.Schema(
       drivingLicenseNumber: { type: String, trim: true, default: '' },
       notes: { type: String, trim: true, default: '' }
     },
+    offlineCustomerDetails: {
+      name: { type: String, trim: true, default: '' },
+      phone: { type: String, trim: true, default: '' },
+      drivingLicenseNumber: { type: String, trim: true, default: '' },
+      notes: { type: String, trim: true, default: '' }
+    },
     bookingType: {
       type: String,
       enum: Object.values(BOOKING_TYPES),

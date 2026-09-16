@@ -3,6 +3,7 @@ import { connectDB } from './config/db.js';
 import { ENV } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { FuelPriceService } from './services/fuelPrice.service.js';
+import './models/index.js';
 
 const startServer = async () => {
   try {

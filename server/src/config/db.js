@@ -738,24 +738,38 @@ export const connectDB = async () => {
     throw new Error(errorMsg);
   }
 
-  // 1. Try Primary MongoDB Connection (Atlas / Configured URI)
-  try {
-    const conn = await mongoose.connect(ENV.MONGODB_URI, {
-      autoIndex: true,
-      serverSelectionTimeoutMS: 4000,
-    });
+  // 1. Try Primary MongoDB Connection (Atlas / Configured URI) with robust timeout & retry
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      logger.info(`Connecting to primary MongoDB (attempt ${attempt}/${maxAttempts})...`);
+      const conn = await mongoose.connect(ENV.MONGODB_URI, {
+        autoIndex: true,
+        serverSelectionTimeoutMS: 15000,
+      });
 
-    const host = conn.connection.host || 'remote-cluster';
-    const dbName = conn.connection.name || 'default';
-    logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
-    await autoSeedIfEmpty();
-    attachListeners();
-    return conn;
-  } catch (error) {
-    logger.warn(`Primary MongoDB connection failed (${error.message}).`);
+      const host = conn.connection.host || 'remote-cluster';
+      const dbName = conn.connection.name || 'default';
+      logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
+      await autoSeedIfEmpty();
+      attachListeners();
+      return conn;
+    } catch (error) {
+      if (attempt < maxAttempts) {
+        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 1.5s...`);
+        await new Promise((res) => setTimeout(res, 1500));
+      } else {
+        logger.error(`Primary MongoDB connection failed after ${maxAttempts} attempts: ${error.message}`);
+        // In Development Mode, fall back to local MongoMemoryServer with explicit warning
+        if (ENV.NODE_ENV === 'development') {
+          logger.warn('⚠️ [DATABASE FALLBACK] Falling back to local MongoMemoryServer because primary MongoDB is unreachable. Data written now will NOT sync to MongoDB Atlas.');
+        }
+      }
+    }
+  }
 
-    // 2. In Development Mode, fall back to resilient local MongoMemoryServer with persistent disk storage
-    if (ENV.NODE_ENV === 'development') {
+  // 2. In Development Mode, fall back to resilient local MongoMemoryServer with persistent disk storage
+  if (ENV.NODE_ENV === 'development') {
       try {
         const fs = await import('fs');
         const activeUriFile = path.join(storageDir, 'active_uri.txt');
@@ -806,12 +820,11 @@ export const connectDB = async () => {
         return conn;
       } catch (fallbackError) {
         logger.error(`Fallback persistent MongoDB failed: ${fallbackError.message}`);
-        throw error;
+        throw fallbackError;
       }
     } else {
-      throw error;
+      throw new Error('Primary MongoDB connection failed and fallback is disabled outside development.');
     }
-  }
 };
 
 export const disconnectDB = async () => {

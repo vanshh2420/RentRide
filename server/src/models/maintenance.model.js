@@ -13,16 +13,33 @@ const maintenanceSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Vendor ID is required']
     },
+    title: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    serviceType: {
+      type: String,
+      default: 'GENERAL_SERVICE'
+    },
     maintenanceType: {
       type: String,
-      enum: ['routine', 'repair', 'inspection', 'accident', 'cleaning'],
-      default: 'routine',
-      required: true
+      default: 'routine'
     },
     description: {
       type: String,
-      required: [true, 'Maintenance description is required'],
+      default: function() { return this.title || this.notes || 'Vehicle Maintenance'; },
       trim: true
+    },
+    notes: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    estimatedCost: {
+      type: Number,
+      default: 0,
+      min: [0, 'Cost cannot be negative']
     },
     cost: {
       type: Number,

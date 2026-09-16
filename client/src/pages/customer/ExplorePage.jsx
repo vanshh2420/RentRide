@@ -94,7 +94,14 @@ export const ExplorePage = () => {
 
       const res = await vehicleApi.searchVehicles(queryParams);
       setVehicles(res.data?.vehicles || []);
-      setPagination(res.data?.pagination || { total: 0, pages: 1, page: 1 });
+      const pag = res.data?.pagination || {};
+      const totalPages = pag.totalPages || pag.pages || 1;
+      setPagination({
+        total: pag.total || 0,
+        page: pag.page || 1,
+        pages: totalPages,
+        totalPages
+      });
       if (res.data?.vehicles?.length > 0 && !selectedMapVehicle) {
         setSelectedMapVehicle(res.data.vehicles[0]);
       }

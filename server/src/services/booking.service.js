@@ -291,6 +291,22 @@ export class BookingService {
 
     await booking.save();
 
+    // Reconcile Payment ledger refundDetails
+    if (booking.paymentStatus === PAYMENT_STATUS.SUCCESS && refundAmount > 0) {
+      const payment = await Payment.findOne({ bookingId: booking._id, status: PAYMENT_STATUS.SUCCESS });
+      if (payment) {
+        payment.refundDetails = {
+          refundId: `rfnd_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          amount: refundAmount,
+          status: 'INITIATED',
+          reason: reason || 'Booking cancellation',
+          processedAt: new Date()
+        };
+        payment.status = PAYMENT_STATUS.REFUNDED;
+        await payment.save();
+      }
+    }
+
     // Send in-app notification to Vendor
     await Notification.create({
       recipientId: booking.vendorId,
@@ -369,11 +385,17 @@ export class BookingService {
       priceBreakdown: finalPriceBreakdown,
       status: BOOKING_STATUS.CONFIRMED,
       paymentStatus: isPaymentCollected ? PAYMENT_STATUS.SUCCESS : PAYMENT_STATUS.PENDING,
+      offlineCustomer: {
+        name: offlineCustomer?.name?.trim() || '',
+        phone: offlineCustomer?.phone?.trim() || '',
+        drivingLicenseNumber: offlineCustomer?.drivingLicenseNumber?.trim().toUpperCase() || '',
+        notes: offlineCustomer?.notes || 'Walk-in desk customer'
+      },
       offlineCustomerDetails: {
-        name: offlineCustomer.name.trim(),
-        phone: offlineCustomer.phone.trim(),
-        drivingLicenseNumber: offlineCustomer.drivingLicenseNumber.trim().toUpperCase(),
-        notes: offlineCustomer.notes || 'Walk-in desk customer'
+        name: offlineCustomer?.name?.trim() || '',
+        phone: offlineCustomer?.phone?.trim() || '',
+        drivingLicenseNumber: offlineCustomer?.drivingLicenseNumber?.trim().toUpperCase() || '',
+        notes: offlineCustomer?.notes || 'Walk-in desk customer'
       }
     });
 
@@ -590,7 +612,13 @@ export class BookingService {
     const [vehicles, bookings, payments] = await Promise.all([
       Vehicle.find({ vendorId }),
       Booking.find({ vendorId }),
-      Payment.find({ 'vendorPayout.vendorId': vendorId })
+      Payment.find({
+        $or: [
+          { 'metadata.vendorPayout.vendorId': vendorId },
+          { 'vendorPayout.vendorId': vendorId },
+          { userId: vendorId }
+        ]
+      })
     ]);
 
     const totalFleet = vehicles.length;
@@ -612,8 +640,8 @@ export class BookingService {
     });
 
     const settledAmount = payments
-      .filter((p) => p.vendorPayout?.status === 'SETTLED')
-      .reduce((sum, p) => sum + (p.vendorPayout?.amount || 0), 0);
+      .filter((p) => (p.vendorPayout?.status === 'SETTLED' || p.metadata?.vendorPayout?.status === 'SETTLED'))
+      .reduce((sum, p) => sum + (p.vendorPayout?.amount || p.metadata?.vendorPayout?.amount || 0), 0);
 
     const pendingPayout = Math.max(0, netEarnings - settledAmount);
 

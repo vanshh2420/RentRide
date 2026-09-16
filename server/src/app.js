@@ -16,8 +16,8 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, postman) or matching client url
-      if (!origin || origin === ENV.CLIENT_URL || origin.startsWith('http://localhost')) {
+      // Allow requests with no origin (like mobile apps, curl, postman) or matching client url or local addresses
+      if (!origin || origin === ENV.CLIENT_URL || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by CORS policy'));

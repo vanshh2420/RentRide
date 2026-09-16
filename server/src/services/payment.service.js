@@ -105,6 +105,25 @@ export class PaymentService {
       throw new ApiError(404, 'Booking not found');
     }
 
+    // Ownership check: Customer must own this booking
+    if (booking.customerId && booking.customerId.toString() !== userId.toString()) {
+      throw new ApiError(403, 'You are not authorized to verify payment for this booking');
+    }
+
+    // Idempotency: If booking is already confirmed and paid, return existing state
+    if (booking.status === BOOKING_STATUS.CONFIRMED && booking.paymentStatus === PAYMENT_STATUS.SUCCESS) {
+      const existingPayment = await Payment.findOne({ bookingId: booking._id });
+      return { booking, payment: existingPayment };
+    }
+
+    // Check duplicate payment transaction ID across bookings
+    if (razorpay_payment_id && !razorpay_payment_id.startsWith('simulated_pay_')) {
+      const duplicateTxn = await Payment.findOne({ razorpayPaymentId: razorpay_payment_id });
+      if (duplicateTxn && duplicateTxn.bookingId.toString() !== booking._id.toString()) {
+        throw new ApiError(400, 'This payment transaction ID has already been utilized for another booking');
+      }
+    }
+
     const keySecret = getRazorpayKeySecret();
     const isTestPlaceholder =
       !keySecret ||
@@ -123,7 +142,7 @@ export class PaymentService {
       }
     }
 
-    // 1. Update Booking to CONFIRMED & convert temporary lock
+    // 1. Update Booking to CONFIRMED & release temporary lock
     booking.status = BOOKING_STATUS.CONFIRMED;
     booking.paymentStatus = PAYMENT_STATUS.SUCCESS;
     booking.lockExpiresAt = null; // Permanent reservation lock
@@ -191,7 +210,14 @@ export class PaymentService {
       throw new ApiError(404, 'Booking not found');
     }
 
+    // Ownership check
+    if (booking.customerId && booking.customerId.toString() !== userId.toString()) {
+      throw new ApiError(403, 'You are not authorized to update this booking');
+    }
+
     booking.paymentStatus = PAYMENT_STATUS.FAILED;
+    booking.status = BOOKING_STATUS.CANCELLED;
+    booking.lockExpiresAt = null; // Immediately release slot inventory
     await booking.save();
 
     await Notification.create({

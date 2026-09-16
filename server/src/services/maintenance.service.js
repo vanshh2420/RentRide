@@ -63,10 +63,13 @@ export class MaintenanceService {
       vehicleId,
       vendorId: vehicle.vendorId,
       title,
+      description: title || notes || 'Vehicle Maintenance',
       serviceType,
+      maintenanceType: 'routine',
       startDate: start,
       endDate: end,
       estimatedCost: Number(estimatedCost),
+      cost: Number(estimatedCost),
       notes,
       status: 'SCHEDULED'
     });

@@ -596,10 +596,11 @@ export const AddVehicleModal = ({ isOpen, onClose, onVehicleAdded, vehicleToEdit
                       <option value="km/l">km/l</option>
                       <option value="km/kg">km/kg</option>
                       <option value="km/charge">km/charge</option>
+                      <option value="km/kWh">km/kWh</option>
                     </select>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    Adaptive unit ({watch('fuelType') === 'electric' ? 'km/charge for EV' : watch('fuelType') === 'cng' ? 'km/kg for CNG' : 'km/l for petrol/diesel'}).
+                    Adaptive unit ({watch('fuelType') === 'electric' ? 'km/charge or km/kWh for EV' : watch('fuelType') === 'cng' ? 'km/kg for CNG' : 'km/l for petrol/diesel'}).
                   </p>
                 </div>
               </div>

@@ -178,7 +178,24 @@ export const DemandForecastWidget = ({ defaultCity = "Indore" }) => {
             </div>
           </div>
         </>
-      ) : null}
+      ) : (
+        <div className="p-8 text-center space-y-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <TrendingUp className="w-8 h-8 text-slate-400 mx-auto" />
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            Demand forecast temporarily unavailable for {city}
+          </p>
+          <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+            Unable to fetch real-time demand modeling at this moment. Please check back shortly or retry.
+          </p>
+          <button
+            type="button"
+            onClick={fetchForecast}
+            className="px-4 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+          >
+            Retry Forecast
+          </button>
+        </div>
+      )}
     </div>
   );
 };

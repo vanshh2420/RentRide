@@ -1,0 +1,79 @@
+# ==============================================================================
+# RentRide Root .gitignore
+# ==============================================================================
+
+# Environment variable files (contains database passwords, API secrets, JWT keys)
+.env
+.env.local
+.env.*.local
+*.env
+!*.env.example
+
+# Dependencies
+node_modules/
+*/node_modules/
+jspm_packages/
+web_modules/
+
+# Production Build Output
+dist/
+*/dist/
+build/
+*/build/
+out/
+.next/
+
+# Python / FastAPI AI Microservice
+__pycache__/
+*/__pycache__/
+*/**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+*/.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE & Editor Directories
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Temporary & Cache files
+.cache/
+.temp/
+.tmp/
+.eslintcache
+.parcel-cache
+.turbo/
+.mongo-storage/
+
+# UI audit / generated screenshots
+client/screenshots/

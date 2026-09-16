@@ -1,0 +1,10 @@
+export { User } from './user.model.js';
+export { Category } from './category.model.js';
+export { Vehicle } from './vehicle.model.js';
+export { Booking } from './booking.model.js';
+export { Payment } from './payment.model.js';
+export { Review } from './review.model.js';
+export { Coupon } from './coupon.model.js';
+export { Notification } from './notification.model.js';
+export { Maintenance } from './maintenance.model.js';
+export { VehicleCatalog } from './catalog.model.js';

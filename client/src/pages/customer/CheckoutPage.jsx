@@ -5,6 +5,7 @@ import { vehicleApi } from '../../services/vehicleApi';
 import { bookingApi } from '../../services/bookingApi';
 import { toLocalISOString, toApiISOString } from '../../utils/dateUtils';
 import { PriceBreakdownCard } from '../../features/booking/PriceBreakdownCard';
+import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { 
   Car, 
   MapPin, 
@@ -19,8 +20,12 @@ import {
   User, 
   CreditCard,
   ChevronRight,
-  Info
+  Info,
+  CheckCircle2,
+  Zap,
+  Sparkles
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export const CheckoutPage = () => {
   const { id } = useParams();
@@ -169,39 +174,55 @@ export const CheckoutPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Breadcrumb Header */}
-      <div className="flex items-center space-x-2 text-xs text-slate-500">
-        <Link to="/" className="hover:text-slate-900 dark:hover:text-white">Home</Link>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <Link to="/explore" className="hover:text-slate-900 dark:hover:text-white">Fleet</Link>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-slate-900 dark:text-white font-bold">Checkout & Reserve</span>
-      </div>
+      <Breadcrumb
+        items={[
+          { label: 'Explore Fleet', href: '/explore' },
+          { label: `${vehicle.brand} ${vehicle.model}`, href: `/vehicles/${vehicle._id}` },
+          { label: 'Checkout & Reserve' }
+        ]}
+      />
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div>
-          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            Confirm & Lock Reservation
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Review rental schedule, driver credentials, and secure your 10-minute temporary inventory lock.
-          </p>
-        </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/20">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <span>Instant Confirmation</span>
+      {/* Progress Flow Steps Header (Guideline 18) */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-subtle">
+        <div className="flex items-center justify-between max-w-2xl mx-auto text-xs">
+          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+            <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-xs font-bold">
+              ✓
+            </div>
+            <span>1. Vehicle</span>
+          </div>
+          <div className="h-0.5 w-8 sm:w-16 bg-emerald-500 rounded-full" />
+          
+          <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-bold">
+            <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center text-xs font-bold">
+              2
+            </div>
+            <span>2. Schedule & Plan</span>
+          </div>
+          <div className="h-0.5 w-8 sm:w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+
+          <div className="flex items-center gap-2 text-slate-400 font-medium">
+            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold">
+              3
+            </div>
+            <span>3. Payment</span>
+          </div>
         </div>
       </div>
 
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 text-xs flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Form & Configuration */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* 2-Column Desktop Layout (Guideline 19) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column (7 cols): Vehicle, Schedule, Driver Details, Coupon */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+          
           {/* Vehicle Showcase Card */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle flex flex-col sm:flex-row items-center gap-5">
             <div className="relative w-full sm:w-48 aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
@@ -233,133 +254,157 @@ export const CheckoutPage = () => {
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
             <h3 className="font-heading font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-4 h-4 text-brand-600" />
-              <span>1. Rental Schedule & Duration Plan</span>
+              <span>Rental Schedule & Duration Plan</span>
             </h3>
 
             {/* Plan selector buttons */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { id: 'HOURLY', label: 'Hourly Flexi', rate: `₹${vehicle.pricing.hourlyRate}/hr` },
-                { id: '12_HOURS', label: '12-Hour Day Pack', rate: `₹${vehicle.pricing.rate12Hour}` },
-                { id: '24_HOURS', label: '24-Hour Escape', rate: `₹${vehicle.pricing.rate24Hour}` }
+                { id: 'HOURLY', label: 'Hourly Flexi', rate: `₹${vehicle.pricing?.hourlyRate}/hr` },
+                { id: '12_HOURS', label: '12-Hour Day Pack', rate: `₹${vehicle.pricing?.rate12Hour}` },
+                { id: '24_HOURS', label: '24-Hour Escape', rate: `₹${vehicle.pricing?.rate24Hour}` }
               ].map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => setRentalPlan(p.id)}
-                  className={`p-3.5 rounded-2xl border text-center transition-all ${
+                  className={cn(
+                    "p-3.5 rounded-2xl border text-center transition-all",
                     rentalPlan === p.id
-                      ? 'border-brand-600 bg-brand-50/70 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 shadow-xs scale-[1.02]'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                  }`}
+                      ? "border-brand-600 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500/20 text-brand-600 dark:text-brand-400 font-extrabold shadow-xs"
+                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-600 dark:text-slate-400 font-medium"
+                  )}
                 >
-                  <span className="text-xs font-bold block">{p.label}</span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white mt-0.5 block">{p.rate}</span>
+                  <div className="text-xs">{p.label}</div>
+                  <div className="font-heading font-black text-sm text-slate-900 dark:text-white mt-1">
+                    {p.rate}
+                  </div>
                 </button>
               ))}
             </div>
 
-            {rentalPlan === 'HOURLY' && (
-              <div className="space-y-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span>Selected Duration:</span>
-                  <span className="text-brand-600 font-extrabold">{hours} Hours</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="11"
-                  value={hours}
-                  onChange={(e) => setHours(Number(e.target.value))}
-                  className="w-full accent-brand-600 cursor-pointer h-1.5"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 font-semibold">
-                  <span>1 Hour</span>
-                  <span>11 Hours</span>
-                </div>
-              </div>
-            )}
-
-            {/* Date Pickers */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+            {/* Dates & Hours Config */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Pickup Date & Time
                 </label>
-                <input
-                  type="datetime-local"
-                  value={startDateTime}
-                  onChange={(e) => setStartDateTime(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                />
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+                  <input
+                    type="datetime-local"
+                    value={startDateTime}
+                    onChange={(e) => setStartDateTime(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                  Estimated Return Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={endDateTime}
-                  readOnly
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 cursor-not-allowed"
-                />
-              </div>
+              {rentalPlan === 'HOURLY' ? (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Rental Duration (Hours)
+                  </label>
+                  <select
+                    value={hours}
+                    onChange={(e) => setHours(Number(e.target.value))}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none cursor-pointer"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
+                      <option key={h} value={h}>
+                        {h} {h === 1 ? 'Hour' : 'Hours'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Estimated Return Time
+                  </label>
+                  <div className="relative">
+                    <Clock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      disabled
+                      value={endDateTime ? new Date(endDateTime).toLocaleString() : ''}
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Availability Alert */}
-            {!isAvailable && (
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-600" />
-                <span>{availabilityReason}</span>
-              </div>
-            )}
+            {/* Live slot lock availability pill */}
+            <div className="pt-2">
+              {isCheckingPrice ? (
+                <div className="text-xs text-slate-400 flex items-center gap-2">
+                  <div className="w-3.5 h-3.5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                  <span>Checking interval availability...</span>
+                </div>
+              ) : isAvailable ? (
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between">
+                  <span className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Selected Slot is 100% Available & Ready for Instant Lock</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white uppercase tracking-wider">
+                    Conflict-Free
+                  </span>
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                  <span>{availabilityReason}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Rider Verification */}
+          {/* Driver & KYC Credentials Card */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-4">
             <h3 className="font-heading font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
               <User className="w-4 h-4 text-brand-600" />
-              <span>2. Primary Driver Verification</span>
+              <span>2. Driver & KYC Verification</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-1">
-                <span className="text-slate-400 font-bold uppercase text-[10px]">Driver Name</span>
-                <p className="font-extrabold text-slate-900 dark:text-white">{user?.name}</p>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div>
+                <span className="text-slate-400 font-bold uppercase text-[10px]">Registered Renter</span>
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{user?.name}</h4>
+                <p className="text-slate-500">{user?.email} • {user?.phone || 'Contact verified'}</p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-1">
-                <span className="text-slate-400 font-bold uppercase text-[10px]">Contact Mobile</span>
-                <p className="font-extrabold text-slate-900 dark:text-white">{user?.phone || 'Verified Phone'}</p>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>KYC Pre-Approved</span>
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span>Bring your original physical driving license for verification during vehicle handover.</span>
-            </div>
+            <p className="text-[11px] text-slate-400">
+              Please bring your original physical Driving Licence & Aadhaar/Passport at the pickup hub for rapid 60-second handover.
+            </p>
           </div>
-        </div>
 
-        {/* Right Col: Price Breakdown & Checkout Action */}
-        <div className="space-y-6">
-          {/* Coupon Code Input */}
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-accent-500" />
-              <span>Apply Promotional Coupon</span>
-            </h4>
+          {/* Coupon Code Section */}
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-4">
+            <h3 className="font-heading font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <Tag className="w-4 h-4 text-brand-600" />
+              <span>3. Apply Coupon & Promo Code</span>
+            </h3>
 
             {appliedCoupon ? (
-              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                  <Check className="w-4 h-4" /> {appliedCoupon.code} Applied
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-bold">
+                  <Tag className="w-4 h-4 text-emerald-600" />
+                  <span>Coupon <strong>{appliedCoupon.code}</strong> Applied Successfully!</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleRemoveCoupon}
-                  className="text-xs font-bold text-red-500 hover:underline"
+                  className="text-xs font-bold text-rose-600 hover:underline"
                 >
                   Remove
                 </button>
@@ -368,14 +413,14 @@ export const CheckoutPage = () => {
               <form onSubmit={handleApplyCoupon} className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="e.g. WELCOME100"
                   value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-extrabold uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Enter coupon code (e.g. WELCOME100)..."
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white uppercase placeholder:normal-case placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-slate-900 hover:bg-brand-600 text-white dark:bg-brand-600 dark:hover:bg-brand-500 rounded-xl text-xs font-bold shadow-xs transition-colors"
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all"
                 >
                   Apply
                 </button>
@@ -383,40 +428,50 @@ export const CheckoutPage = () => {
             )}
           </div>
 
-          {/* Price Breakdown Component */}
-          <PriceBreakdownCard
-            priceBreakdown={priceData}
-            rentalPlan={rentalPlan}
-            durationHours={hours}
-            appliedCoupon={appliedCoupon}
-          />
-
-          {/* Submit Action */}
-          <button
-            type="button"
-            disabled={!isAvailable || isBooking || isCheckingPrice}
-            onClick={handleCreateBooking}
-            className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-brand-600 text-white dark:bg-brand-600 dark:hover:bg-brand-500 font-extrabold text-sm shadow-md hover:shadow-hover transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isBooking ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Locking Inventory Slot...</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-4 h-4" />
-                <span>Confirm & Proceed to Pay</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-
-          <p className="text-center text-[11px] text-slate-400">
-            🔒 10-minute temporary inventory lock holds your slot during payment checkout.
-          </p>
         </div>
+
+        {/* Right Column (5 cols): Authoritative Breakdown & Lock Confirmation */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+          <div className="sticky top-24 space-y-6">
+            <PriceBreakdownCard
+              priceBreakdown={priceData}
+              rentalPlan={rentalPlan}
+              durationHours={hours}
+              appliedCoupon={appliedCoupon}
+            />
+
+            {/* Lock & Reserve Action */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleCreateBooking}
+                disabled={!isAvailable || isBooking || isCheckingPrice}
+                className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-500 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-md hover:shadow-hover transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isBooking ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Locking Slot & Securing Vehicle...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span>Secure Slot & Proceed to Pay</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <p className="text-[11px] text-center text-slate-400">
+                🔒 You will have 10 minutes to complete payment via Razorpay.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 };
+
+export default CheckoutPage;

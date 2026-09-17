@@ -5,6 +5,8 @@ import { VehicleCard } from '../../features/vehicles/VehicleCard';
 import { FilterPanel } from '../../features/vehicles/FilterPanel';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import { EmptyState } from '../../components/common/EmptyState';
+import { Drawer } from '../../components/ui/Drawer';
+import { Pagination } from '../../components/ui/Pagination';
 import { 
   Search, 
   SlidersHorizontal, 
@@ -12,8 +14,6 @@ import {
   Grid, 
   Map as MapIcon, 
   X, 
-  ChevronLeft, 
-  ChevronRight, 
   Sparkles,
   ArrowUpDown,
   Car,
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { MapView } from '../../components/common/MapView';
 import { SUPPORTED_CITIES } from '../../constants/cities';
+import { cn } from '../../utils/cn';
 
 export const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -223,9 +224,11 @@ export const ExplorePage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      
       {/* Top Search & Filter Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          
           {/* Search Input */}
           <div className="relative w-full md:w-96">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
@@ -236,10 +239,19 @@ export const ExplorePage = () => {
               onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
             />
+            {filters.search && (
+              <button
+                type="button"
+                onClick={() => setFilters({ ...filters, search: '', page: 1 })}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* City Selector, View Toggle, Sort & Mobile Filters */}
-          <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5 w-full md:w-auto">
             {/* City Dropdown */}
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
               <MapPin className="w-3.5 h-3.5 text-brand-600" />
@@ -248,7 +260,7 @@ export const ExplorePage = () => {
                 onChange={(e) => setFilters({ ...filters, city: e.target.value, page: 1 })}
                 className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="all" className="dark:bg-slate-800 font-semibold">All Hubs & Cities</option>
+                <option value="all" className="dark:bg-slate-800 font-semibold">All Cities & Hubs</option>
                 {SUPPORTED_CITIES.map((c) => (
                   <option key={c.name} value={c.name} className="dark:bg-slate-800">
                     {c.name}, {c.state}
@@ -276,13 +288,14 @@ export const ExplorePage = () => {
             <button
               onClick={handleFindNearMe}
               disabled={isLocating}
-              className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${
+              className={cn(
+                "px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border",
                 isNearbyMode
-                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-500'
-              }`}
+                  ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-500"
+              )}
             >
-              <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+              <Navigation className={cn("w-3.5 h-3.5", isLocating && "animate-spin")} />
               <span>{isLocating ? 'Locating...' : 'Near Me'}</span>
             </button>
 
@@ -290,22 +303,24 @@ export const ExplorePage = () => {
             <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                   viewMode === 'grid'
-                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                    ? "bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                )}
               >
                 <Grid className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Grid</span>
               </button>
               <button
                 onClick={() => setViewMode('map')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                   viewMode === 'map'
-                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                    ? "bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                )}
               >
                 <MapIcon className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Map</span>
@@ -314,8 +329,9 @@ export const ExplorePage = () => {
 
             {/* Mobile Filter Trigger Button */}
             <button
-              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+              onClick={() => setMobileFilterOpen(true)}
               className="lg:hidden p-2 rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200"
+              aria-label="Open filter drawer"
             >
               <SlidersHorizontal className="w-4 h-4" />
             </button>
@@ -353,7 +369,7 @@ export const ExplorePage = () => {
                 <button
                   type="button"
                   onClick={() => removeFilter(chip.key, chip.defaultVal)}
-                  className="hover:text-red-500"
+                  className="hover:text-rose-600 transition-colors"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -372,8 +388,9 @@ export const ExplorePage = () => {
 
       {/* Main Results Grid & Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Sticky Sidebar: FilterPanel */}
-        <div className={`lg:block ${mobileFilterOpen ? 'block' : 'hidden'}`}>
+        
+        {/* Left Sticky Sidebar: FilterPanel for Desktop */}
+        <div className="hidden lg:block">
           <div className="sticky top-24">
             <FilterPanel
               filters={filters}
@@ -382,6 +399,26 @@ export const ExplorePage = () => {
             />
           </div>
         </div>
+
+        {/* Mobile Filter Drawer */}
+        <Drawer
+          isOpen={mobileFilterOpen}
+          onClose={() => setMobileFilterOpen(false)}
+          title="Filter Vehicles"
+          subtitle="Refine by plan, category, fuel, and pricing"
+          position="right"
+        >
+          <FilterPanel
+            filters={filters}
+            onFilterChange={(newF) => {
+              handleFilterChange(newF);
+            }}
+            onResetFilters={() => {
+              handleResetFilters();
+              setMobileFilterOpen(false);
+            }}
+          />
+        </Drawer>
 
         {/* Right Main Content */}
         <div className="lg:col-span-3 space-y-6">
@@ -401,117 +438,57 @@ export const ExplorePage = () => {
             </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && <CardSkeleton count={6} />}
-
-          {/* Empty State */}
-          {!isLoading && vehicles.length === 0 && (
+          {/* Results View */}
+          {isLoading ? (
+            <CardSkeleton count={6} />
+          ) : vehicles.length === 0 ? (
             <EmptyState
+              icon={Car}
               title="No rides found matching your filters"
-              description={
-                isNearbyMode
-                  ? "We couldn't find any available vehicles within 50 km of your location right now. Try expanding your search or selecting a city hub."
-                  : filters.city && filters.city !== 'all'
-                  ? `We couldn't find any available vehicles in ${filters.city} matching your selected filters.`
-                  : "We couldn't find any available vehicles matching your selected filters."
-              }
-              actionText={isNearbyMode ? "View All Cities" : "Reset All Filters"}
-              onAction={isNearbyMode ? handleClearNearby : handleResetFilters}
+              description="Try resetting your filters or selecting a different city to see available verified fleets."
+              actionText="Clear All Filters"
+              onAction={handleResetFilters}
             />
-          )}
-
-          {/* Grid View */}
-          {!isLoading && vehicles.length > 0 && viewMode === 'grid' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {vehicles.map((vehicle) => (
-                <VehicleCard key={vehicle._id} vehicle={vehicle} />
-              ))}
-            </div>
-          )}
-
-          {/* Interactive Leaflet Map View */}
-          {!isLoading && vehicles.length > 0 && viewMode === 'map' && (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-card space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-brand-600" />
-                    Interactive Dispatch Map {filters.city && filters.city !== 'all' ? `(${filters.city})` : ''}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Pins represent verified available vehicles parked at pickup desks with live pricing.
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-brand-600 bg-brand-50 dark:bg-brand-950 px-3 py-1.5 rounded-full border border-brand-200">
-                  {vehicles.length} Vehicles On Map
-                </span>
+          ) : viewMode === 'map' ? (
+            <div className="space-y-6">
+              <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 h-[500px] shadow-subtle">
+                <MapView
+                  vehicles={vehicles}
+                  selectedVehicle={selectedMapVehicle}
+                  onSelectVehicle={setSelectedMapVehicle}
+                  userCoords={userCoords}
+                />
               </div>
 
-              {/* Leaflet Map */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
-                  <MapView
-                    vehicles={vehicles}
-                    userLocation={userCoords}
-                    centerCity={filters.city || 'Indore'}
-                    height="460px"
-                    onSelectVehicle={(v) => setSelectedMapVehicle(v)}
+              {selectedMapVehicle && (
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-card">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">
+                    Selected Vehicle on Map
+                  </span>
+                  <div className="max-w-md">
+                    <VehicleCard vehicle={selectedMapVehicle} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {vehicles.map((vehicle) => (
+                  <VehicleCard key={vehicle._id} vehicle={vehicle} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pagination.pages > 1 && (
+                <div className="pt-4 flex justify-center">
+                  <Pagination
+                    currentPage={filters.page}
+                    totalPages={pagination.pages}
+                    onPageChange={(p) => setFilters({ ...filters, page: p })}
                   />
                 </div>
-
-                {/* Selected Vehicle Quick Inspector */}
-                <div className="space-y-3">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Selected Vehicle Pin:
-                  </span>
-                  {selectedMapVehicle ? (
-                    <VehicleCard vehicle={selectedMapVehicle} />
-                  ) : (
-                    <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-2">
-                      <MapPin className="w-8 h-8 text-brand-500 mx-auto" />
-                      <p className="font-bold text-xs text-slate-800 dark:text-white">Click any pin</p>
-                      <p className="text-[11px] text-slate-400">
-                        Tap on a price badge on the map to preview vehicle specifications and initiate checkout.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Pagination Controls */}
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-6 border-t border-slate-200/80 dark:border-slate-800">
-              <button
-                disabled={filters.page <= 1}
-                onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
-                className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {Array.from({ length: pagination.pages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setFilters({ ...filters, page: i + 1 })}
-                  className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${
-                    filters.page === i + 1
-                      ? 'bg-brand-600 text-white shadow-sm'
-                      : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                disabled={filters.page >= pagination.pages}
-                onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
-                className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              )}
             </div>
           )}
         </div>
@@ -519,3 +496,5 @@ export const ExplorePage = () => {
     </div>
   );
 };
+
+export default ExplorePage;

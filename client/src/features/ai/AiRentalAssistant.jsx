@@ -14,8 +14,10 @@ import {
   ShieldCheck, 
   RotateCcw,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Car
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export const AiRentalAssistant = () => {
   const navigate = useNavigate();
@@ -28,13 +30,13 @@ export const AiRentalAssistant = () => {
     {
       id: 'welcome',
       sender: 'ai',
-      text: "👋 Hi! I'm your **RentRide AI Assistant**. How can I help you today? I can help you discover rides, check rental plans, find nearby hubs, or explain our cancellation policies.",
+      text: "👋 Hi! I'm **RentRide Intelligence**. Tell me about your journey, group size, or budget and I'll find your ideal conflict-free ride.",
       vehicles: [],
       suggestedActions: [
-        'Find bikes under ₹800',
-        'Explain rental plans',
-        'Electric vehicles',
-        'What is cancellation policy?'
+        'Find scooters under ₹700 for 12 hours',
+        'Automatic cars for weekend trip',
+        'Show electric vehicles in Indore',
+        'How does zero double-booking work?'
       ]
     }
   ]);
@@ -70,9 +72,9 @@ export const AiRentalAssistant = () => {
       const aiReplyMsg = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: aiResponse.reply || "Here's what I found for you:",
+        text: aiResponse.reply || "Here's what I matched for your travel requirements:",
         vehicles: aiResponse.vehicles || [],
-        suggestedActions: aiResponse.suggestedActions || ['Find Bikes', 'Show Cars', 'Explain Plans']
+        suggestedActions: aiResponse.suggestedActions || ['Explore All Vehicles', 'Search Indore Hubs']
       };
 
       setMessages((prev) => [...prev, aiReplyMsg]);
@@ -83,7 +85,7 @@ export const AiRentalAssistant = () => {
         {
           id: (Date.now() + 1).toString(),
           sender: 'ai',
-          text: "I couldn't reach the AI server right now, but you can browse our full fleet anytime!",
+          text: "I couldn't reach the AI recommendation server at this instant, but you can browse our live verified fleet anytime!",
           suggestedActions: ['Explore All Vehicles', 'Search Indore Hubs']
         }
       ]);
@@ -103,21 +105,22 @@ export const AiRentalAssistant = () => {
 
   return (
     <>
-      {/* Floating Action Launcher Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Action Launcher Button (Guideline 23 & 25) */}
+      <div className="fixed bottom-20 md:bottom-6 right-5 sm:right-6 z-40">
         {!isOpen && (
           <button
+            type="button"
             onClick={() => setIsOpen(true)}
-            className="group relative flex items-center gap-2.5 px-4 py-3.5 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-accent-600 text-white font-bold text-xs shadow-2xl hover:shadow-brand-500/40 hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20"
+            className="group relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 via-brand-600 to-sky-600 text-white font-extrabold text-xs shadow-2xl hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20"
+            aria-label="Open RentRide AI Assistant"
           >
             <div className="relative">
-              <Bot className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
+              <Sparkles className="w-4 h-4 text-amber-300 animate-spin [animation-duration:8s]" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
             </div>
-            <span className="tracking-wide">AI Assistant</span>
-            <span className="hidden sm:inline text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
-              Ask Me
+            <span className="tracking-tight font-heading">✨ RentRide AI</span>
+            <span className="hidden sm:inline text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
+              Ask
             </span>
           </button>
         )}
@@ -125,63 +128,69 @@ export const AiRentalAssistant = () => {
 
       {/* Floating Chat Modal */}
       {isOpen && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-32px)] sm:w-[420px] h-[580px] max-h-[85vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-fadeIn">
+        <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-32px)] sm:w-[420px] h-[580px] max-h-[82vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-fadeIn">
+          
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-brand-600 via-indigo-600 to-accent-600 text-white shadow-sm">
+          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-indigo-700 via-brand-600 to-sky-600 text-white shadow-sm">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                <Bot className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-xs">
+                <Sparkles className="w-4 h-4 text-amber-300" />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-sm leading-tight flex items-center gap-1.5">
-                  RentRide AI Assistant
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <h3 className="font-heading font-black text-sm leading-tight flex items-center gap-1.5">
+                  <span>RentRide Intelligence</span>
                 </h3>
-                <p className="text-[11px] text-white/80">
-                  Instant fleet guidance & policy navigator
+                <p className="text-[10px] text-white/80 font-medium">
+                  Instant fleet guidance & schedule matching
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
               className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              aria-label="Close assistant"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/60 dark:bg-slate-900/60 text-xs">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/70 dark:bg-slate-950/60 text-xs">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} space-y-2`}
+                className={cn(
+                  "flex flex-col space-y-2",
+                  msg.sender === 'user' ? 'items-end' : 'items-start'
+                )}
               >
                 <div
-                  className={`max-w-[85%] p-3.5 rounded-2xl leading-relaxed whitespace-pre-wrap ${
+                  className={cn(
+                    "max-w-[88%] p-3.5 rounded-2xl leading-relaxed whitespace-pre-wrap text-xs",
                     msg.sender === 'user'
-                      ? 'bg-brand-600 text-white rounded-br-none shadow-sm'
-                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200/80 dark:border-slate-700 shadow-xs'
-                  }`}
+                      ? "bg-brand-600 text-white rounded-br-none shadow-xs font-medium"
+                      : "bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200/80 dark:border-slate-800 shadow-subtle"
+                  )}
                 >
                   {msg.text}
                 </div>
 
-                {/* Structured Vehicle Recommendation Cards (Feature D Safety Rule: Non-transactional, safe checkout CTA) */}
+                {/* Structured Vehicle Recommendation Cards */}
                 {msg.vehicles && msg.vehicles.length > 0 && (
                   <div className="w-full space-y-2 pt-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1">
-                      Matching Verified Fleet:
+                      Matched Vehicles:
                     </span>
                     <div className="space-y-2">
                       {msg.vehicles.map((v) => (
                         <div
                           key={v._id}
-                          className="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-xs hover:border-brand-300 transition-all"
+                          className="p-3 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-800 flex items-center justify-between gap-3 shadow-subtle hover:border-brand-400 transition-all"
                         >
                           <div className="flex items-center gap-2.5 overflow-hidden">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
                               <img
                                 src={v.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=300&q=80'}
                                 alt={v.model}
@@ -193,12 +202,12 @@ export const AiRentalAssistant = () => {
                                 {v.brand} {v.model}
                               </h4>
                               <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                                <span>₹{v.pricing?.hourlyRate}/hr</span>
+                                <span className="font-black text-slate-800 dark:text-slate-200">₹{v.pricing?.hourlyRate}/hr</span>
                                 <span>•</span>
                                 <span>{v.location?.city || 'Indore'}</span>
                               </p>
                               {v.fuelEconomy && (
-                                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
                                   {v.fuelEconomy} {v.fuelEconomyUnit || 'km/l'}
                                 </p>
                               )}
@@ -209,16 +218,16 @@ export const AiRentalAssistant = () => {
                             <Link
                               to={`/checkout/${v._id}`}
                               onClick={() => setIsOpen(false)}
-                              className="px-2.5 py-1 rounded-xl bg-accent-600 hover:bg-accent-700 text-white text-[10px] font-bold text-center transition-all shadow-xs"
+                              className="px-2.5 py-1 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-[10px] font-bold text-center transition-all shadow-xs"
                             >
-                              Proceed to Checkout
+                              Reserve
                             </Link>
                             <Link
                               to={`/vehicles/${v._id}`}
                               onClick={() => setIsOpen(false)}
-                              className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-[10px] font-semibold text-center transition-all"
+                              className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-[10px] font-medium text-center transition-all"
                             >
-                              View Details
+                              Details
                             </Link>
                           </div>
                         </div>
@@ -227,14 +236,15 @@ export const AiRentalAssistant = () => {
                   </div>
                 )}
 
-                {/* Suggested Follow-up Quick Action Pills */}
+                {/* Suggested Action Chips */}
                 {msg.suggestedActions && msg.suggestedActions.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {msg.suggestedActions.map((action, idx) => (
                       <button
                         key={idx}
+                        type="button"
                         onClick={() => handleQuickAction(action)}
-                        className="px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-medium border border-slate-200 dark:border-slate-700 transition-all"
+                        className="px-3 py-1 rounded-full bg-white dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 shadow-2xs transition-all"
                       >
                         {action}
                       </button>
@@ -249,13 +259,13 @@ export const AiRentalAssistant = () => {
                 <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                 <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                <span className="text-[11px] ml-1">Analyzing verified fleet...</span>
+                <span className="text-[11px] ml-1">Finding verified matches...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message Input Footer */}
+          {/* Input Footer */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -267,13 +277,14 @@ export const AiRentalAssistant = () => {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask about rides, plans, policies..."
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              placeholder="Find me a scooter under ₹700 for 12 hours..."
+              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             <button
               type="submit"
               disabled={!inputMessage.trim() || isLoading}
-              className="p-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white transition-all disabled:opacity-50 shadow-md"
+              className="p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition-all disabled:opacity-40 shadow-xs flex-shrink-0"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -283,3 +294,5 @@ export const AiRentalAssistant = () => {
     </>
   );
 };
+
+export default AiRentalAssistant;

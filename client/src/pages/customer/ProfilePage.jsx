@@ -5,6 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { profileFormSchema, changePasswordFormSchema } from '../../validators/authValidators';
 import { userApi } from '../../services/userApi';
 import { updateUserProfile } from '../../features/auth/authSlice';
+import { Breadcrumb } from '../../components/ui/Breadcrumb';
+import { Tabs } from '../../components/ui/Tabs';
+import { Button } from '../../components/ui/Button';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { 
   User, 
   Mail, 
@@ -26,16 +30,21 @@ import {
   Shield,
   Copy,
   Check,
-  Sparkles
+  Sparkles,
+  Bell
 } from 'lucide-react';
 import { CityAutocomplete } from '../../components/common/CityAutocomplete';
+import { cn } from '../../utils/cn';
 
 export const ProfilePage = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
-  // States
+  // Tabs state
+  const [activeTab, setActiveTab] = useState('personal');
+
+  // Feedback States
   const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
   const [profileErrorMsg, setProfileErrorMsg] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
@@ -134,17 +143,14 @@ export const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setProfileErrorMsg('Image size cannot exceed 5MB');
       return;
     }
 
-    // Local preview
     const objectUrl = URL.createObjectURL(file);
     setAvatarPreview(objectUrl);
 
-    // Upload immediately
     setIsUploadingAvatar(true);
     setProfileSuccessMsg('');
     setProfileErrorMsg('');
@@ -164,7 +170,6 @@ export const ProfilePage = () => {
     }
   };
 
-  // Profile update submit
   const onUpdateProfile = async (data) => {
     setIsProfileSaving(true);
     setProfileSuccessMsg('');
@@ -180,7 +185,6 @@ export const ProfilePage = () => {
     }
   };
 
-  // Change password submit
   const onChangePassword = async (data) => {
     setIsPasswordSaving(true);
     setPasswordSuccessMsg('');
@@ -215,10 +219,25 @@ export const ProfilePage = () => {
       })
     : 'Recently';
 
+  const profileTabs = [
+    { id: 'personal', label: 'Personal Information', icon: User },
+    { id: 'kyc', label: 'KYC & License', icon: ShieldCheck },
+    { id: 'security', label: 'Password & Security', icon: Lock },
+    { id: 'preferences', label: 'Preferences', icon: Bell }
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* 1. PROFILE HEADER CARD */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass flex flex-col md:flex-row items-center md:items-start gap-6 relative overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+      {/* Breadcrumb Header */}
+      <Breadcrumb
+        items={[
+          { label: 'Account Center' },
+          { label: 'Profile Settings' }
+        ]}
+      />
+
+      {/* 1. PROFILE HEADER HERO CARD */}
+      <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle flex flex-col md:flex-row items-center md:items-start gap-6 relative overflow-hidden">
         {/* Background Ambient Glow */}
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -244,7 +263,6 @@ export const ProfilePage = () => {
             )}
           </div>
 
-          {/* Change Avatar Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -265,18 +283,10 @@ export const ProfilePage = () => {
         {/* Header Details */}
         <div className="space-y-2 text-center md:text-left flex-1">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+            <h1 className="font-heading text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {user?.name}
             </h1>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-xs ${
-              user?.role === 'admin'
-                ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                : user?.role === 'vendor'
-                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                : 'bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-800'
-            }`}>
-              {user?.role} Account
-            </span>
+            <StatusBadge status={user?.role?.toUpperCase()} size="xs" />
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400 pt-1">
@@ -295,377 +305,365 @@ export const ProfilePage = () => {
               Member since {formattedJoinedDate}
             </span>
           </div>
+
+          <div className="pt-2 flex items-center justify-center md:justify-start gap-2">
+            <span className="font-mono text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+              UID: {user?._id?.slice(-8).toUpperCase()}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyId}
+              className="text-xs font-semibold text-slate-500 hover:text-brand-600 flex items-center gap-1"
+            >
+              {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedId ? 'Copied' : 'Copy ID'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Global Alerts */}
+      {/* 2. SECTION TABS (Guideline 22) */}
+      <Tabs
+        tabs={profileTabs}
+        activeTab={activeTab}
+        onChange={(t) => setActiveTab(t)}
+      />
+
+      {/* Alert Notices */}
       {profileSuccessMsg && (
-        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm flex items-center justify-between shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            <span>{profileSuccessMsg}</span>
-          </div>
-          <button onClick={() => setProfileSuccessMsg('')} className="text-xs text-emerald-600 hover:underline">
-            Dismiss
-          </button>
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2.5">
+          <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span>{profileSuccessMsg}</span>
         </div>
       )}
 
       {profileErrorMsg && (
-        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm flex items-center justify-between shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <span>{profileErrorMsg}</span>
-          </div>
-          <button onClick={() => setProfileErrorMsg('')} className="text-xs text-red-600 hover:underline">
-            Dismiss
-          </button>
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+          <span>{profileErrorMsg}</span>
         </div>
       )}
 
-      {/* 2. MAIN FORMS GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT 2 COLUMNS: EDIT PROFILE DETAILS */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div>
-                <h2 className="font-heading text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-brand-600" />
-                  Personal Information
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Update your contact info, full name, and role details.
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      {...registerProfile('name')}
-                      placeholder="e.g. Rahul Sharma"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                    />
-                  </div>
-                  {profileErrors.name && (
-                    <p className="text-xs text-red-500 mt-1">{profileErrors.name.message}</p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="tel"
-                      {...registerProfile('phone')}
-                      placeholder="e.g. +91 98765 43210"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                    />
-                  </div>
-                  {profileErrors.phone && (
-                    <p className="text-xs text-red-500 mt-1">{profileErrors.phone.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  <input
-                    type="email"
-                    {...registerProfile('email')}
-                    placeholder="e.g. rahul@example.com"
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                  />
-                </div>
-                {profileErrors.email && (
-                  <p className="text-xs text-red-500 mt-1">{profileErrors.email.message}</p>
-                )}
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Note: Updating your email address will change your login credentials.
-                </p>
-              </div>
-
-              {/* Customer Specific Fields (Driving License) */}
-              {user?.role === 'customer' && (
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Driving License Number (KYC)
-                  </label>
-                  <div className="relative">
-                    <FileText className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      placeholder="e.g. KA0320190012345"
-                      {...registerProfile('drivingLicenseNumber')}
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                    />
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Used for expedited vehicle pickup verification at vendor desks.
-                  </p>
-                </div>
-              )}
-
-              {/* Vendor Specific Business Profile */}
-              {user?.role === 'vendor' && (
-                <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <h3 className="font-heading font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Store className="w-4 h-4 text-amber-500" /> Fleet Vendor Business Details
-                  </h3>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                      Business / Agency Name
-                    </label>
-                    <div className="relative">
-                      <Building className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                      <input
-                        type="text"
-                        {...registerProfile('businessName')}
-                        placeholder="e.g. Apex Bangalore Fleet Rentals"
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                        GST Number
-                      </label>
-                      <input
-                        type="text"
-                        {...registerProfile('gstNumber')}
-                        placeholder="e.g. 29ABCDE1234F1Z5"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <CityAutocomplete
-                        label="Operating Hub City"
-                        placeholder="Select hub (Indore, Bhopal, Gwalior)"
-                        value={watchProfile('city')}
-                        onChange={(cityName) => setValueProfile('city', cityName, { shouldValidate: true, shouldDirty: true })}
-                        error={profileErrors.city?.message}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Privileges Info */}
-              {user?.role === 'admin' && (
-                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs text-purple-800 dark:text-purple-200 space-y-1">
-                  <span className="font-bold flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4" /> Platform Administrator Privileges
-                  </span>
-                  <p className="leading-relaxed">
-                    You have global access to manage vehicles, platform commissions, coupons, and user management.
-                  </p>
-                </div>
-              )}
-
-              <div className="pt-2 flex items-center justify-end">
-                <button
-                  type="submit"
-                  disabled={isProfileSaving}
-                  className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md hover:shadow-hover flex items-center gap-2 transition-all duration-200 disabled:opacity-60"
-                >
-                  <Save className="w-4 h-4" />
-                  {isProfileSaving ? 'Saving Changes...' : 'Save Profile Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: SECURITY & PASSWORD CHANGE */}
-        <div className="space-y-6">
-          {/* Security & Password Card */}
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-6">
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-              <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-accent-500" />
-                Change Password
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Ensure your account is protected with a strong password.
-              </p>
-            </div>
-
-            {passwordSuccessMsg && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 flex-shrink-0" /> {passwordSuccessMsg}
-              </div>
-            )}
-
-            {passwordErrorMsg && (
-              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" /> {passwordErrorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordSubmit(onChangePassword)} className="space-y-4">
-              {/* Current Password */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Current Password <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    {...registerPassword('currentPassword')}
-                    placeholder="Enter current password"
-                    className="w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-accent-500 focus:outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {passwordErrors.currentPassword && (
-                  <p className="text-xs text-red-500 mt-1">{passwordErrors.currentPassword.message}</p>
-                )}
-              </div>
-
-              {/* New Password */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  New Password <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    {...registerPassword('newPassword')}
-                    placeholder="Min 6 characters"
-                    className="w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-accent-500 focus:outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {passwordErrors.newPassword && (
-                  <p className="text-xs text-red-500 mt-1">{passwordErrors.newPassword.message}</p>
-                )}
-
-                {/* Password Strength Indicator */}
-                {newPasswordValue.length > 0 && (
-                  <div className="space-y-1 pt-1.5">
-                    <div className="grid grid-cols-4 gap-1.5 h-1 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
-                      <div className={`h-full ${passwordStrength >= 1 ? 'bg-red-500' : ''}`} />
-                      <div className={`h-full ${passwordStrength >= 2 ? 'bg-amber-500' : ''}`} />
-                      <div className={`h-full ${passwordStrength >= 3 ? 'bg-sky-500' : ''}`} />
-                      <div className={`h-full ${passwordStrength >= 4 ? 'bg-emerald-500' : ''}`} />
-                    </div>
-                    <span className="text-[10px] text-slate-400 block text-right">
-                      {passwordStrength <= 1 && 'Weak'}
-                      {passwordStrength === 2 && 'Fair'}
-                      {passwordStrength === 3 && 'Good'}
-                      {passwordStrength >= 4 && 'Strong'}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Confirm New Password <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    {...registerPassword('confirmPassword')}
-                    placeholder="Repeat new password"
-                    className="w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-accent-500 focus:outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {passwordErrors.confirmPassword && (
-                  <p className="text-xs text-red-500 mt-1">{passwordErrors.confirmPassword.message}</p>
-                )}
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isPasswordSaving}
-                  className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-black dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs shadow-md transition-all duration-200 disabled:opacity-60"
-                >
-                  {isPasswordSaving ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Account Overview Metadata Card */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-4">
-            <h3 className="font-heading font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-brand-600" /> Account Security & Status
+      {/* TAB 1: PERSONAL INFORMATION */}
+      {activeTab === 'personal' && (
+        <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
+          <div className="space-y-1 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+              Personal Information
             </h3>
+            <p className="text-xs text-slate-500">
+              Update your contact profile and rental preferences.
+            </p>
+          </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-                <span className="text-slate-500">Status</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5" /> Active & Verified
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Full Legal Name
+              </label>
+              <input
+                type="text"
+                {...registerProfile('name')}
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              />
+              {profileErrors.name && (
+                <p className="text-[11px] text-rose-500 font-semibold">{profileErrors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Email Address
+              </label>
+              <input
+                type="email"
+                disabled
+                value={user?.email || ''}
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-medium text-slate-500 cursor-not-allowed"
+              />
+              <span className="text-[10px] text-slate-400">Primary authentication identifier</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Contact Phone Number
+              </label>
+              <input
+                type="tel"
+                {...registerProfile('phone')}
+                placeholder="+91 98765 43210"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              />
+              {profileErrors.phone && (
+                <p className="text-[11px] text-rose-500 font-semibold">{profileErrors.phone.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Vendor Specific Business Fields */}
+          {user?.role === 'vendor' && (
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+              <h4 className="font-heading font-bold text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <Store className="w-4 h-4 text-amber-500" />
+                <span>Commercial Fleet Partner Info</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Business / Fleet Name
+                  </label>
+                  <input
+                    type="text"
+                    {...registerProfile('businessName')}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    GSTIN / Tax ID
+                  </label>
+                  <input
+                    type="text"
+                    {...registerProfile('gstNumber')}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none uppercase"
+                  />
+                </div>
               </div>
+            </div>
+          )}
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-                <span className="text-slate-500">Account ID</span>
+          <div className="pt-4 flex justify-end">
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              isLoading={isProfileSaving}
+              leftIcon={Save}
+            >
+              Save Profile Changes
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 2: KYC & LICENSE */}
+      {activeTab === 'kyc' && (
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
+          <div className="space-y-1 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              <span>KYC & Verification Status</span>
+            </h3>
+            <p className="text-xs text-slate-500">
+              Government verification ensures rapid, keyless, and contactless vehicle dispatch.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold">
+                <Check className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200">
+                  Aadhaar & Identity Verified
+                </h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                  Your identity has been pre-verified by RentRide's automated security check.
+                </p>
+              </div>
+            </div>
+            <StatusBadge status="VERIFIED" size="xs" />
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Driving Licence Number
+            </label>
+            <div className="max-w-md">
+              <input
+                type="text"
+                {...registerProfile('drivingLicenseNumber')}
+                placeholder="e.g. MP-09-20210012345"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Your physical driving licence will be visually confirmed by the hub manager upon initial vehicle pickup.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: PASSWORD & SECURITY */}
+      {activeTab === 'security' && (
+        <form onSubmit={handlePasswordSubmit(onChangePassword)} className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
+          <div className="space-y-1 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+              Password & Security Settings
+            </h3>
+            <p className="text-xs text-slate-500">
+              Ensure your account is protected with a strong, distinct password.
+            </p>
+          </div>
+
+          {passwordSuccessMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2.5">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>{passwordSuccessMsg}</span>
+            </div>
+          )}
+
+          {passwordErrorMsg && (
+            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+              <span>{passwordErrorMsg}</span>
+            </div>
+          )}
+
+          <div className="max-w-md space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Current Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  {...registerPassword('currentPassword')}
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
                 <button
-                  onClick={handleCopyId}
-                  className="font-mono text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1 hover:text-brand-600"
-                  title="Copy User ID"
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-3 text-slate-400"
                 >
-                  <span>{user?._id?.substring(0, 10)}...</span>
-                  {copiedId ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {passwordErrors.currentPassword && (
+                <p className="text-[11px] text-rose-500">{passwordErrors.currentPassword.message}</p>
+              )}
+            </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-                <span className="text-slate-500">Registered</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                </span>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  {...registerPassword('newPassword')}
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-3 text-slate-400"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+              {/* Strength Meter */}
+              {newPasswordValue && (
+                <div className="space-y-1 pt-1">
+                  <div className="flex gap-1 h-1.5">
+                    {[1, 2, 3, 4].map((step) => (
+                      <div
+                        key={step}
+                        className={cn(
+                          "flex-1 rounded-full transition-colors",
+                          passwordStrength >= step
+                            ? step <= 2
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
+                            : "bg-slate-200 dark:bg-slate-700"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-slate-400 block text-right">
+                    {passwordStrength <= 2 ? 'Weak' : passwordStrength === 3 ? 'Good' : 'Strong'}
+                  </span>
+                </div>
+              )}
+              {passwordErrors.newPassword && (
+                <p className="text-[11px] text-rose-500">{passwordErrors.newPassword.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...registerPassword('confirmPassword')}
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-slate-400"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {passwordErrors.confirmPassword && (
+                <p className="text-[11px] text-rose-500">{passwordErrors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isPasswordSaving}
+              >
+                Update Password
+              </Button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 4: PREFERENCES */}
+      {activeTab === 'preferences' && (
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
+          <div className="space-y-1 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+              Account Preferences
+            </h3>
+            <p className="text-xs text-slate-500">
+              Manage notifications and marketing messages.
+            </p>
+          </div>
+
+          <div className="space-y-4 max-w-xl text-xs">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white">Booking Reminders & OTPs</h4>
+                <p className="text-[11px] text-slate-400">Receive SMS & notifications regarding pickup and return times</p>
+              </div>
+              <input type="checkbox" defaultChecked className="w-4 h-4 accent-brand-600 cursor-pointer" />
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white">Promotional Discounts & Coupons</h4>
+                <p className="text-[11px] text-slate-400">Special weekend getaway coupons and festival flash rentals</p>
+              </div>
+              <input type="checkbox" defaultChecked className="w-4 h-4 accent-brand-600 cursor-pointer" />
             </div>
           </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 };
+
+export default ProfilePage;

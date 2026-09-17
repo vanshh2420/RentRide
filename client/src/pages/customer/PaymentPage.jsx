@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { bookingApi } from '../../services/bookingApi';
 import { paymentApi } from '../../services/paymentApi';
 import { PriceBreakdownCard } from '../../features/booking/PriceBreakdownCard';
+import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { 
   CreditCard, 
   ShieldCheck, 
@@ -14,8 +15,14 @@ import {
   Lock, 
   Sparkles,
   Zap,
-  Building
+  Building,
+  CheckCircle2,
+  Calendar,
+  MapPin,
+  FileText,
+  KeyRound
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export const PaymentPage = () => {
   const { id: bookingId } = useParams();
@@ -110,7 +117,7 @@ export const PaymentPage = () => {
           contact: user?.phone || '9999999999'
         },
         theme: {
-          color: '#0284c7'
+          color: '#2557eb'
         },
         handler: async (response) => {
           try {
@@ -194,174 +201,325 @@ export const PaymentPage = () => {
     );
   }
 
+  // =========================================================================
+  // SUCCESS / CONFIRMATION EXPERIENCE (Guideline 20)
+  // =========================================================================
   if (paymentSuccess) {
+    const finalBooking = confirmedBooking || booking;
+    const v = finalBooking?.vehicleId;
+
     return (
-      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg animate-bounce">
-          <CheckCircle className="w-10 h-10" />
-        </div>
-
-        <div className="space-y-2">
-          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-            Payment Confirmed
-          </span>
-          <h1 className="font-heading text-3xl font-extrabold text-slate-900 dark:text-white">
-            Your Ride is Reserved!
-          </h1>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Booking <span className="font-bold text-slate-800 dark:text-slate-200">#{confirmedBooking?.bookingNumber || booking?.bookingNumber}</span> has been confirmed. The vendor has been notified for pickup.
-          </p>
-        </div>
-
-        <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left space-y-3 text-xs">
-          <div className="flex justify-between border-b pb-2 border-slate-200 dark:border-slate-700">
-            <span className="text-slate-400">Total Paid (with deposit):</span>
-            <span className="font-bold text-slate-900 dark:text-white">₹{booking?.priceBreakdown?.totalAmount}</span>
+      <div className="max-w-2xl mx-auto px-4 py-12 space-y-8 animate-fadeIn">
+        {/* Success Icon & Confirmation Heading */}
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+            <CheckCircle2 className="w-9 h-9 stroke-[2.2]" />
           </div>
-          <div className="flex justify-between border-b pb-2 border-slate-200 dark:border-slate-700">
-            <span className="text-slate-400">Pickup Date & Time:</span>
-            <span className="font-bold text-slate-900 dark:text-white">{new Date(booking?.startDateTime).toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Vehicle:</span>
-            <span className="font-bold text-slate-900 dark:text-white">{booking?.vehicleId?.brand} {booking?.vehicleId?.model}</span>
+          <div className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              Payment Verified & Locked
+            </span>
+            <h1 className="font-heading text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+              Booking Confirmed
+            </h1>
+            <p className="font-mono text-sm font-bold text-slate-500">
+              Reference: <span className="text-slate-900 dark:text-white">{finalBooking?.bookingNumber || 'RR-CONFIRMED'}</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+        {/* Vehicle & Trip Summary Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-card space-y-5">
+          <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="w-20 h-14 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+              <img
+                src={v?.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80'}
+                alt={v?.model || 'Vehicle'}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600">
+                {v?.categoryId?.name || 'Ride'}
+              </span>
+              <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+                {v?.brand} {v?.model}
+              </h3>
+              <p className="text-xs text-slate-400 font-mono">{v?.registrationNumber}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="space-y-1">
+              <span className="text-slate-400 uppercase font-bold text-[10px]">Pickup Date</span>
+              <p className="font-bold text-slate-900 dark:text-white">
+                {finalBooking?.startDateTime ? new Date(finalBooking.startDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'As Scheduled'}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-slate-400 uppercase font-bold text-[10px]">Return Date</span>
+              <p className="font-bold text-slate-900 dark:text-white">
+                {finalBooking?.endDateTime ? new Date(finalBooking.endDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'As Scheduled'}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-slate-400 uppercase font-bold text-[10px]">Hub Location</span>
+              <p className="font-bold text-slate-900 dark:text-white">
+                {v?.location?.city || 'Indore'} Central Hub
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-slate-400 uppercase font-bold text-[10px]">Total Paid</span>
+              <p className="font-heading font-black text-slate-900 dark:text-white text-base">
+                ₹{finalBooking?.pricing?.totalAmount || '0'}
+              </p>
+            </div>
+          </div>
+
+          {/* Handover OTP Pill */}
+          {finalBooking?.handoverOtp && (
+            <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-center space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300 flex items-center justify-center gap-1">
+                <KeyRound className="w-3 h-3" /> Pickup Dispatch OTP
+              </span>
+              <p className="font-mono font-black text-2xl tracking-widest text-brand-600 dark:text-brand-400">
+                {finalBooking.handoverOtp}
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Show this OTP to the fleet host at the hub to start your journey.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Booking Lifecycle Timeline (Guideline 20) */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-4">
+          <h4 className="font-heading font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+            Trip Timeline
+          </h4>
+          <div className="space-y-3">
+            {[
+              { label: 'Booking Confirmed', desc: 'Payment verified & slot locked atomically', done: true },
+              { label: 'Pick Up Vehicle', desc: 'Reach dispatch hub and provide 4-digit OTP', current: true },
+              { label: 'Start Your Trip', desc: 'Complete rapid digital vehicle inspection', upcoming: true },
+              { label: 'Return Vehicle', desc: 'Return to hub & security deposit auto-refunded', upcoming: true },
+              { label: 'Leave a Review', desc: 'Rate your ride experience & earn mobility rewards', upcoming: true },
+            ].map((step, idx) => (
+              <div key={idx} className="flex items-start gap-3">
+                <div className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5",
+                  step.done
+                    ? "bg-emerald-500 text-white"
+                    : step.current
+                    ? "bg-brand-600 text-white ring-4 ring-brand-500/20 animate-pulse"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                )}>
+                  {step.done ? '✓' : idx + 1}
+                </div>
+                <div>
+                  <h5 className={cn("text-xs font-bold", step.done || step.current ? "text-slate-900 dark:text-white" : "text-slate-400")}>
+                    {step.label}
+                  </h5>
+                  <p className="text-[11px] text-slate-500">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <Link
-            to={`/bookings/${booking?._id}`}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-colors"
+            to={`/bookings/${finalBooking?._id || bookingId}`}
+            className="px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md text-center flex items-center justify-center gap-2"
           >
-            View Tax Invoice
+            <span>View Full Booking Details</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/my-bookings"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="px-6 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs text-center"
           >
-            Go to My Bookings
+            My Bookings Center
           </Link>
         </div>
       </div>
     );
   }
 
+  // =========================================================================
+  // PAYMENT SELECTION VIEW
+  // =========================================================================
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Top Lock Banner */}
-      <div className="glass-panel p-4 sm:p-5 rounded-3xl border border-amber-200/90 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-subtle">
-        <div className="flex items-center gap-3 text-amber-800 dark:text-amber-300">
-          <Clock className="w-6 h-6 flex-shrink-0 animate-pulse text-amber-600" />
-          <div className="text-xs">
-            <span className="font-bold block">Vehicle Inventory Slot Locked</span>
-            <span className="text-amber-700 dark:text-amber-400">
-              Complete payment before timer expires to guarantee reservation.
-            </span>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Breadcrumb Header */}
+      <Breadcrumb
+        items={[
+          { label: 'Explore', href: '/explore' },
+          { label: 'Checkout', href: `/checkout/${booking?.vehicleId?._id || ''}` },
+          { label: 'Secure Payment' }
+        ]}
+      />
+
+      {/* 10-Minute Lock Hold Timer */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <Clock className="w-5 h-5 text-amber-600 animate-pulse flex-shrink-0" />
+          <div>
+            <h4 className="font-extrabold text-amber-900 dark:text-amber-200">
+              Inventory Held For You
+            </h4>
+            <p className="text-amber-700 dark:text-amber-300/80">
+              This vehicle is temporarily locked against double-booking. Complete payment before time runs out.
+            </p>
           </div>
         </div>
-
-        <div className="px-4 py-2 rounded-2xl bg-amber-600 text-white font-mono text-base font-extrabold shadow-sm">
-          {timeLeft > 0 ? formatTimer(timeLeft) : 'EXPIRED'}
+        <div className="font-mono font-black text-2xl text-amber-900 dark:text-amber-200 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/60 flex-shrink-0">
+          {formatTimer(timeLeft)}
         </div>
       </div>
 
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-red-50 text-red-700 text-xs flex items-center gap-2 border border-red-200">
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {timeLeft <= 0 && (
-        <div className="p-6 rounded-3xl bg-red-50 text-red-700 text-center space-y-3">
-          <AlertCircle className="w-8 h-8 mx-auto" />
-          <h3 className="font-bold text-base">Your 10-Minute Reservation Slot Has Expired</h3>
-          <p className="text-xs">The vehicle slot has been released back into the fleet. Please pick a new time.</p>
-          <Link to="/explore" className="inline-block px-5 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold">
-            Back to Explore
-          </Link>
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Left Column (7 cols): Payment Gateway Options */}
+        <div className="md:col-span-7 space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-6">
+            <div className="space-y-1">
+              <h2 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+                Select Payment Method
+              </h2>
+              <p className="text-xs text-slate-500">
+                Safe, PCI-DSS compliant checkout with instant refund protection.
+              </p>
+            </div>
 
-      {timeLeft > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left 2 Cols: Payment Options */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6 shadow-subtle">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400">Secure Checkout</span>
-                <h2 className="font-heading text-xl font-bold text-slate-900 dark:text-white mt-0.5">
-                  Select Payment Option
-                </h2>
-              </div>
-
-              {/* Razorpay Gateway Card */}
-              <div className="p-5 rounded-2xl border-2 border-brand-600 bg-brand-50/40 dark:bg-brand-950/20 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 font-bold text-slate-900 dark:text-white text-sm">
-                    <CreditCard className="w-5 h-5 text-brand-600" />
-                    <span>Razorpay Standard Gateway</span>
+            {/* Gateway Card */}
+            <div className="p-5 rounded-2xl border-2 border-brand-600 bg-brand-50/40 dark:bg-brand-950/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-xs">
+                    <CreditCard className="w-5 h-5" />
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-600 text-white">
-                    Recommended
-                  </span>
+                  <div>
+                    <h3 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                      Razorpay Online Gateway
+                    </h3>
+                    <p className="text-[11px] text-slate-500">UPI, GooglePay, Cards, NetBanking, Wallets</p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Pay instantly via UPI (GPay, PhonePe, Paytm), Credit & Debit Cards (Visa, Mastercard, RuPay), or NetBanking.
-                </p>
-                <div className="flex items-center gap-3 pt-2 text-[11px] text-slate-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>256-Bit SSL Encrypted & RBI Compliant</span>
-                </div>
+                <span className="w-4 h-4 rounded-full border-4 border-brand-600 bg-white dark:bg-slate-900 flex-shrink-0" />
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3 pt-2">
-                <button
-                  type="button"
-                  disabled={isProcessing || timeLeft <= 0}
-                  onClick={handleRazorpayPayment}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-600 to-sky-600 hover:from-brand-700 hover:to-sky-700 text-white font-bold text-sm shadow-md hover:shadow-hover transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing Payment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>Pay ₹{booking?.priceBreakdown?.totalAmount} with Razorpay</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+              <div className="pt-2 border-t border-brand-200/60 dark:border-brand-900/60 flex items-center justify-between text-[11px] text-slate-500">
+                <span className="flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-emerald-600" /> 256-Bit SSL Encrypted
+                </span>
+                <span>Zero convenience surcharge</span>
+              </div>
+            </div>
 
-                {/* Instant Dev Mode Sandbox Simulator */}
-                <button
-                  type="button"
-                  disabled={isProcessing || timeLeft <= 0}
-                  onClick={handleSimulatedPayment}
-                  className="w-full py-2.5 px-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Zap className="w-3.5 h-3.5 text-accent-500" />
-                  <span>Simulate Instant Success (Development Sandbox Test)</span>
-                </button>
+            {/* Pay Button */}
+            <button
+              type="button"
+              onClick={handleRazorpayPayment}
+              disabled={isProcessing}
+              className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-500 active:scale-[0.99] disabled:opacity-50 text-white font-extrabold text-sm shadow-md hover:shadow-hover transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Processing Secure Checkout...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Pay ₹{booking?.pricing?.totalAmount} & Confirm Reservation</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            {/* Simulated Sandbox Pay Option */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+              <button
+                type="button"
+                onClick={() => handleSimulatedPayment()}
+                disabled={isProcessing}
+                className="text-xs font-semibold text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 underline"
+              >
+                Fast-track Simulator (Instant Test Verification)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (5 cols): Summary Card */}
+        <div className="md:col-span-5 space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle space-y-4">
+            <h3 className="font-heading font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+              Booking Summary
+            </h3>
+
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-14 h-11 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                <img
+                  src={booking?.vehicleId?.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80'}
+                  alt="Vehicle"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                  {booking?.vehicleId?.brand} {booking?.vehicleId?.model}
+                </h4>
+                <p className="text-[11px] text-slate-400 font-mono">{booking?.bookingNumber}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>Rental Plan</span>
+                <span className="font-bold text-slate-900 dark:text-white">{booking?.rentalPlan}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>Duration</span>
+                <span className="font-bold text-slate-900 dark:text-white">{booking?.billableHours} Hours</span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>Base Fare</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{booking?.pricing?.basePrice}</span>
+              </div>
+              {booking?.pricing?.couponDiscount > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                  <span>Discount</span>
+                  <span>-₹{booking?.pricing?.couponDiscount}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>Security Deposit</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{booking?.pricing?.securityDeposit}</span>
+              </div>
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-baseline text-sm">
+                <span className="font-extrabold text-slate-900 dark:text-white">Amount Due</span>
+                <span className="font-heading font-black text-xl text-slate-900 dark:text-white">
+                  ₹{booking?.pricing?.totalAmount}
+                </span>
               </div>
             </div>
           </div>
-
-          {/* Right Col: Order Breakdown */}
-          <div className="space-y-4">
-            <PriceBreakdownCard
-              priceBreakdown={booking?.priceBreakdown}
-              rentalPlan={booking?.rentalPlan}
-              durationHours={booking?.durationHours}
-              appliedCoupon={booking?.couponApplied}
-            />
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
+
+export default PaymentPage;

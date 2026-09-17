@@ -113,7 +113,7 @@ export class PaymentService {
     // Idempotency: If booking is already confirmed and paid, return existing state
     if (booking.status === BOOKING_STATUS.CONFIRMED && booking.paymentStatus === PAYMENT_STATUS.SUCCESS) {
       const existingPayment = await Payment.findOne({ bookingId: booking._id });
-      return { booking, payment: existingPayment };
+      return { booking, payment: existingPayment, isDuplicate: true };
     }
 
     // Check duplicate payment transaction ID across bookings
@@ -258,7 +258,8 @@ export class PaymentService {
         total,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit))
+        totalPages: Math.ceil(total / Number(limit)),
+        pages: Math.ceil(total / Number(limit))
       }
     };
   }

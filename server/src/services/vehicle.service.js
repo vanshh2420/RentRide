@@ -134,13 +134,19 @@ export class VehicleService {
     if (payload.fuelEconomy !== undefined) vehicle.fuelEconomy = payload.fuelEconomy ? Number(payload.fuelEconomy) : null;
     if (payload.fuelEconomyUnit) vehicle.fuelEconomyUnit = payload.fuelEconomyUnit;
 
-    if (payload.hourlyRate || payload.rate12Hour || payload.rate24Hour || payload.securityDeposit) {
+    if (
+      payload.hourlyRate !== undefined ||
+      payload.rate12Hour !== undefined ||
+      payload.rate24Hour !== undefined ||
+      payload.minRentalHours !== undefined ||
+      payload.securityDeposit !== undefined
+    ) {
       vehicle.pricing = {
-        hourlyRate: payload.hourlyRate || vehicle.pricing.hourlyRate,
-        rate12Hour: payload.rate12Hour || vehicle.pricing.rate12Hour,
-        rate24Hour: payload.rate24Hour || vehicle.pricing.rate24Hour,
-        minRentalHours: payload.minRentalHours || vehicle.pricing.minRentalHours,
-        securityDeposit: payload.securityDeposit !== undefined ? payload.securityDeposit : vehicle.pricing.securityDeposit
+        hourlyRate: payload.hourlyRate !== undefined ? Number(payload.hourlyRate) : vehicle.pricing.hourlyRate,
+        rate12Hour: payload.rate12Hour !== undefined ? Number(payload.rate12Hour) : vehicle.pricing.rate12Hour,
+        rate24Hour: payload.rate24Hour !== undefined ? Number(payload.rate24Hour) : vehicle.pricing.rate24Hour,
+        minRentalHours: payload.minRentalHours !== undefined ? Number(payload.minRentalHours) : vehicle.pricing.minRentalHours,
+        securityDeposit: payload.securityDeposit !== undefined ? Number(payload.securityDeposit) : vehicle.pricing.securityDeposit
       };
     }
 

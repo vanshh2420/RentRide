@@ -1,8 +1,9 @@
 import rateLimit from 'express-rate-limit';
+import { ENV } from '../config/env.js';
 
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per windowMs
+  max: ENV.NODE_ENV === 'development' ? 5000 : 300, // Generous limit for dev/test workflows
   standardHeaders: true,
   legacyHeaders: false,
   message: {

@@ -738,8 +738,10 @@ export const connectDB = async () => {
     throw new Error(errorMsg);
   }
 
-  // 1. Try Primary MongoDB Connection (Atlas / Configured URI) with robust timeout & retry
-  const maxAttempts = 2;
+  // 1. Primary MongoDB Connection (Atlas / Configured URI) with robust timeout & retries
+  const maxAttempts = 3;
+  let lastError = null;
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       logger.info(`Connecting to primary MongoDB (attempt ${attempt}/${maxAttempts})...`);
@@ -749,82 +751,61 @@ export const connectDB = async () => {
       });
 
       const host = conn.connection.host || 'remote-cluster';
-      const dbName = conn.connection.name || 'default';
+      const dbName = conn.connection.name || 'rentride';
       logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
       await autoSeedIfEmpty();
       attachListeners();
       return conn;
     } catch (error) {
+      lastError = error;
       if (attempt < maxAttempts) {
-        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 1.5s...`);
-        await new Promise((res) => setTimeout(res, 1500));
+        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 2s...`);
+        await new Promise((res) => setTimeout(res, 2000));
       } else {
         logger.error(`Primary MongoDB connection failed after ${maxAttempts} attempts: ${error.message}`);
-        // In Development Mode, fall back to local MongoMemoryServer with explicit warning
-        if (ENV.NODE_ENV === 'development') {
-          logger.warn('⚠️ [DATABASE FALLBACK] Falling back to local MongoMemoryServer because primary MongoDB is unreachable. Data written now will NOT sync to MongoDB Atlas.');
-        }
       }
     }
   }
 
-  // 2. In Development Mode, fall back to resilient local MongoMemoryServer with persistent disk storage
-  if (ENV.NODE_ENV === 'development') {
-      try {
-        const fs = await import('fs');
-        const activeUriFile = path.join(storageDir, 'active_uri.txt');
-
-        if (fs.existsSync(activeUriFile)) {
-          const activeUri = fs.readFileSync(activeUriFile, 'utf8').trim();
-          if (activeUri) {
-            try {
-              const conn = await mongoose.connect(activeUri, {
-                autoIndex: true,
-                serverSelectionTimeoutMS: 2000,
-              });
-              logger.info(`MongoDB Connected successfully to existing local persistent instance [URI: ${activeUri}]`);
-              attachListeners();
-              return conn;
-            } catch (activeErr) {
-              try { fs.unlinkSync(activeUriFile); } catch (e) {}
-            }
-          }
-        }
-
-        logger.info('Starting local development persistent MongoDB instance as fallback...');
-        const { MongoMemoryServer } = await import('mongodb-memory-server');
-        if (!fs.existsSync(storageDir)) {
-          fs.mkdirSync(storageDir, { recursive: true });
-        }
-
-        memoryServerInstance = await MongoMemoryServer.create({
-          instance: {
-            dbPath: storageDir,
-            storageEngine: 'wiredTiger',
-            dbName: 'rentride'
-          }
-        });
-        const fallbackUri = memoryServerInstance.getUri();
-        try {
-          fs.writeFileSync(activeUriFile, fallbackUri, 'utf8');
-        } catch (e) {}
-
-        const conn = await mongoose.connect(fallbackUri, {
-          autoIndex: true,
-          serverSelectionTimeoutMS: 5000,
-        });
-
-        logger.info(`MongoDB Connected successfully to local persistent storage instance [Path: ${storageDir} | URI: ${fallbackUri}]`);
-        await autoSeedIfEmpty();
-        attachListeners();
-        return conn;
-      } catch (fallbackError) {
-        logger.error(`Fallback persistent MongoDB failed: ${fallbackError.message}`);
-        throw fallbackError;
+  // 2. Explicit Fallback Check (Strictly disabled unless ALLOW_IN_MEMORY_DB === 'true')
+  if (process.env.ALLOW_IN_MEMORY_DB === 'true') {
+    try {
+      logger.warn('⚠️ [EXPLICIT FALLBACK] ALLOW_IN_MEMORY_DB is set to true. Starting local MongoMemoryServer instance...');
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const fs = await import('fs');
+      if (!fs.existsSync(storageDir)) {
+        fs.mkdirSync(storageDir, { recursive: true });
       }
-    } else {
-      throw new Error('Primary MongoDB connection failed and fallback is disabled outside development.');
+
+      memoryServerInstance = await MongoMemoryServer.create({
+        instance: {
+          dbPath: storageDir,
+          storageEngine: 'wiredTiger',
+          dbName: 'rentride'
+        }
+      });
+      const fallbackUri = memoryServerInstance.getUri();
+      const conn = await mongoose.connect(fallbackUri, {
+        autoIndex: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+
+      logger.info(`MongoDB Connected to fallback local storage instance [Path: ${storageDir} | URI: ${fallbackUri}]`);
+      await autoSeedIfEmpty();
+      attachListeners();
+      return conn;
+    } catch (fallbackError) {
+      logger.error(`Fallback persistent MongoDB failed: ${fallbackError.message}`);
+      throw fallbackError;
     }
+  }
+
+  // Fail fast with clear actionable error rather than silently switching databases
+  throw new Error(
+    `Failed to connect to primary MongoDB at ${ENV.MONGODB_URI.replace(/\/\/.*@/, '//<credentials>@')}. ` +
+    `Reason: ${lastError?.message || 'Connection timeout'}. ` +
+    `Please verify your network connectivity or Atlas IP access list.`
+  );
 };
 
 export const disconnectDB = async () => {

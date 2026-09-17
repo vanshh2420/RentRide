@@ -1,7 +1,7 @@
 import api from './api';
 
 export const vehicleApi = {
-  searchVehicles: async (params = {}) => {
+  searchVehicles: async (params = {}, options = {}) => {
     const cleanParams = {};
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '' && v !== 'all') {
@@ -9,10 +9,10 @@ export const vehicleApi = {
       }
     }
     const query = new URLSearchParams(cleanParams).toString();
-    return await api.get(`/vehicles${query ? `?${query}` : ''}`);
+    return await api.get(`/vehicles${query ? `?${query}` : ''}`, options);
   },
 
-  getNearbyVehicles: async (params = {}) => {
+  getNearbyVehicles: async (params = {}, options = {}) => {
     const cleanParams = {};
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '' && v !== 'all') {
@@ -20,7 +20,7 @@ export const vehicleApi = {
       }
     }
     const query = new URLSearchParams(cleanParams).toString();
-    return await api.get(`/vehicles/nearby${query ? `?${query}` : ''}`);
+    return await api.get(`/vehicles/nearby${query ? `?${query}` : ''}`, options);
   },
 
   getVehicleById: async (id) => {

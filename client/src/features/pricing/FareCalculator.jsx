@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Info,
   Check,
+  CheckCircle2,
   Sparkles,
   Lock
 } from 'lucide-react';

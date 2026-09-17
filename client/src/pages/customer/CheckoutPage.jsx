@@ -48,6 +48,7 @@ export const CheckoutPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Calculation & Availability state
+  const [vehicleLoading, setVehicleLoading] = useState(true);
   const [priceData, setPriceData] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
   const [availabilityReason, setAvailabilityReason] = useState('');
@@ -70,11 +71,14 @@ export const CheckoutPage = () => {
   }, [vehicle, rentalPlan, startDateTime, endDateTime, appliedCoupon]);
 
   const fetchVehicle = async () => {
+    setVehicleLoading(true);
     try {
       const res = await vehicleApi.getVehicleById(id);
       setVehicle(res.data.vehicle);
     } catch (err) {
-      setErrorMessage(err.message || 'Failed to load vehicle');
+      setErrorMessage(err.response?.data?.message || err.message || 'Failed to load vehicle');
+    } finally {
+      setVehicleLoading(false);
     }
   };
 
@@ -163,10 +167,35 @@ export const CheckoutPage = () => {
     }
   };
 
-  if (!vehicle) {
+  if (vehicleLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <div className="max-w-md mx-auto py-20 text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center mx-auto shadow-xs">
+          <Car className="w-7 h-7" />
+        </div>
+        <h2 className="font-heading text-xl font-bold text-slate-900 dark:text-white">Vehicle Not Available</h2>
+        <p className="text-sm text-slate-500">{errorMessage || 'Unable to load vehicle details for checkout.'}</p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={fetchVehicle}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors"
+          >
+            Try Again
+          </button>
+          <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold shadow-sm">
+            <span>Back to Fleet</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     );
   }

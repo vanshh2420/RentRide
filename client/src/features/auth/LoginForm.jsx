@@ -16,7 +16,8 @@ export const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectPath = location.state?.from?.pathname || '/';
+  const fromState = location.state?.from;
+  const redirectPath = fromState ? `${fromState.pathname}${fromState.search || ''}` : '/';
 
   const {
     register,

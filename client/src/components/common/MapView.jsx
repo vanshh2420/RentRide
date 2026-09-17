@@ -52,7 +52,9 @@ export const MapView = ({
 
     // Destroy existing instance if container re-rendered
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
+      try {
+        mapInstanceRef.current.remove();
+      } catch (e) {}
       mapInstanceRef.current = null;
     }
 
@@ -78,7 +80,12 @@ export const MapView = ({
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.stop();
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          // Suppress known leaflet unmount transition race condition
+        }
         mapInstanceRef.current = null;
       }
     };

@@ -36,7 +36,11 @@ export const VehicleCard = ({ vehicle, className }) => {
       className
     )}>
       {/* Media & Badges Showcase */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+      <Link 
+        to={`/vehicles/${vehicle._id}`}
+        className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 block cursor-pointer"
+        aria-label={`View details for ${vehicle.brand} ${vehicle.model}`}
+      >
         <img
           src={primaryImage}
           alt={`${vehicle.brand} ${vehicle.model}`}
@@ -107,7 +111,7 @@ export const VehicleCard = ({ vehicle, className }) => {
             </span>
           )}
         </div>
-      </div>
+      </Link>
 
       {/* Card Body */}
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -119,9 +123,11 @@ export const VehicleCard = ({ vehicle, className }) => {
           </div>
 
           {/* Vehicle Name */}
-          <h3 className="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-1">
-            {vehicle.brand} {vehicle.model}
-          </h3>
+          <Link to={`/vehicles/${vehicle._id}`} className="block group/title">
+            <h3 className="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400 transition-colors line-clamp-1">
+              {vehicle.brand} {vehicle.model}
+            </h3>
+          </Link>
 
           {/* Technical Specs Strip */}
           <div className="flex items-center flex-wrap gap-1.5 pt-0.5">

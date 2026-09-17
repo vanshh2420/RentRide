@@ -14,6 +14,7 @@ router.get('/recommendations', getRecommendations);
 
 // Fleet Demand Forecasting (Vendors & Public Market view)
 router.get('/demand-forecast', getDemandForecast);
+router.get('/forecast', getDemandForecast);
 
 // Real-time Dynamic Pricing Multiplier Quote
 router.post('/dynamic-pricing', getDynamicPricing);

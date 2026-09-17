@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Clock, 
   Sun, 
@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 
 export const RentalPlansPage = () => {
+  const [searchParams] = useSearchParams();
+  const targetedPlan = searchParams.get('plan')?.toUpperCase();
   const [selectedCategoryType, setSelectedCategoryType] = useState('two_wheeler');
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -154,17 +156,24 @@ export const RentalPlansPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {plans.map((plan) => {
           const Icon = plan.icon;
+          const isTargeted = targetedPlan === plan.id;
 
           return (
             <div
               key={plan.id}
-              className={`glass-panel rounded-3xl border ${plan.borderTheme} p-8 flex flex-col justify-between shadow-glass hover:shadow-hover transition-all duration-300 relative group`}
+              className={`glass-panel rounded-3xl border ${
+                isTargeted ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-2xl scale-[1.02]' : plan.borderTheme
+              } p-8 flex flex-col justify-between shadow-glass hover:shadow-hover transition-all duration-300 relative group`}
             >
-              {plan.isPopular && (
+              {isTargeted ? (
+                <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-brand-600 to-accent-600 text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md">
+                  Selected Plan
+                </div>
+              ) : plan.isPopular ? (
                 <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md">
                   Most Popular Choice
                 </div>
-              )}
+              ) : null}
 
               <div className="space-y-6">
                 {/* Header */}

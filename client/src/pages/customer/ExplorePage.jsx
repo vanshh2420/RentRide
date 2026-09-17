@@ -63,26 +63,26 @@ export const ExplorePage = () => {
     const urlPlan = searchParams.get('plan');
     const urlSearch = searchParams.get('search');
 
-    setFilters((prev) => {
-      const updated = { ...prev };
-      if (urlCategory !== null) updated.category = urlCategory;
-      if (urlCity !== null) updated.city = urlCity;
-      if (urlType !== null) updated.type = urlType;
-      if (urlPlan !== null) updated.plan = urlPlan;
-      if (urlSearch !== null) updated.search = urlSearch;
-      updated.page = 1;
-      return updated;
-    });
+    setFilters((prev) => ({
+      ...prev,
+      category: urlCategory || 'all',
+      city: urlCity || 'all',
+      type: urlType || 'all',
+      plan: urlPlan || 'all',
+      search: urlSearch || '',
+      page: 1
+    }));
   }, [searchParams]);
 
   // Fetch vehicles whenever filter state changes
   useEffect(() => {
-    if (!isNearbyMode) {
-      fetchVehicles();
-    }
+    if (isNearbyMode) return;
+    const controller = new AbortController();
+    fetchVehicles(controller.signal);
+    return () => controller.abort();
   }, [filters, isNearbyMode]);
 
-  const fetchVehicles = async () => {
+  const fetchVehicles = async (signal) => {
     setIsLoading(true);
     try {
       const queryParams = { ...filters };
@@ -93,7 +93,7 @@ export const ExplorePage = () => {
       if (queryParams.city === 'all') delete queryParams.city;
       if (!queryParams.search) delete queryParams.search;
 
-      const res = await vehicleApi.searchVehicles(queryParams);
+      const res = await vehicleApi.searchVehicles(queryParams, { signal });
       setVehicles(res.data?.vehicles || []);
       const pag = res.data?.pagination || {};
       const totalPages = pag.totalPages || pag.pages || 1;
@@ -107,6 +107,7 @@ export const ExplorePage = () => {
         setSelectedMapVehicle(res.data.vehicles[0]);
       }
     } catch (err) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
       console.error('Error fetching vehicles:', err);
       setVehicles([]);
     } finally {
@@ -150,36 +151,13 @@ export const ExplorePage = () => {
         }
       },
       (err) => {
-        console.warn('Geolocation unavailable, defaulting to Indore center hub:', err.message);
-        const fallbackCoords = { lat: 22.7196, lng: 75.8577 };
-        setUserCoords(fallbackCoords);
-        setIsNearbyMode(true);
-        loadNearbyWithCoords(fallbackCoords);
+        setIsLocating(false);
+        setIsLoading(false);
+        console.warn('Geolocation unavailable:', err.message);
+        alert('Could not access your location (' + (err.message || 'Permission denied') + '). Please select your city from the city filter.');
       },
       { timeout: 8000 }
     );
-  };
-
-  const loadNearbyWithCoords = async (coords) => {
-    setIsLoading(true);
-    try {
-      const res = await vehicleApi.getNearbyVehicles({
-        lat: coords.lat,
-        lng: coords.lng,
-        radius: 50,
-        limit: 20
-      });
-      setVehicles(res.data?.vehicles || []);
-      setPagination({ total: res.data?.totalFound || 0, pages: 1, page: 1 });
-      if (res.data?.vehicles?.length > 0) {
-        setSelectedMapVehicle(res.data.vehicles[0]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch fallback nearby:', err);
-    } finally {
-      setIsLocating(false);
-      setIsLoading(false);
-    }
   };
 
   const handleClearNearby = () => {

@@ -207,7 +207,8 @@ export class BookingService {
         total,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit))
+        totalPages: Math.ceil(total / Number(limit)),
+        pages: Math.ceil(total / Number(limit))
       }
     };
   }
@@ -453,7 +454,8 @@ export class BookingService {
         total,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit))
+        totalPages: Math.ceil(total / Number(limit)),
+        pages: Math.ceil(total / Number(limit))
       }
     };
   }

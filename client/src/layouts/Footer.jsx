@@ -53,22 +53,22 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li>
-                <Link to="/explore?type=two_wheeler" className="hover:text-white transition-colors">
+                <Link to="/explore?category=scooters" className="hover:text-white transition-colors">
                   Electric & City Scooters
                 </Link>
               </li>
               <li>
-                <Link to="/explore?type=two_wheeler" className="hover:text-white transition-colors">
+                <Link to="/explore?category=bikes" className="hover:text-white transition-colors">
                   Cruiser & Sports Motorcycles
                 </Link>
               </li>
               <li>
-                <Link to="/explore?type=four_wheeler" className="hover:text-white transition-colors">
+                <Link to="/explore?category=hatchbacks" className="hover:text-white transition-colors">
                   City Hatchbacks & Sedans
                 </Link>
               </li>
               <li>
-                <Link to="/explore?type=four_wheeler" className="hover:text-white transition-colors">
+                <Link to="/explore?category=suvs" className="hover:text-white transition-colors">
                   Prime SUVs & 7-Seaters
                 </Link>
               </li>
@@ -88,17 +88,17 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li>
-                <Link to="/rental-plans" className="hover:text-white transition-colors">
+                <Link to="/rental-plans?plan=HOURLY" className="hover:text-white transition-colors">
                   Hourly Flexi-Pass
                 </Link>
               </li>
               <li>
-                <Link to="/rental-plans" className="hover:text-white transition-colors">
+                <Link to="/rental-plans?plan=TWELVE_HOUR" className="hover:text-white transition-colors">
                   12-Hour Day Pack
                 </Link>
               </li>
               <li>
-                <Link to="/rental-plans" className="hover:text-white transition-colors">
+                <Link to="/rental-plans?plan=TWENTY_FOUR_HOUR" className="hover:text-white transition-colors">
                   24-Hour Weekend Escape
                 </Link>
               </li>
@@ -151,9 +151,9 @@ export const Footer = () => {
           <p>© {new Date().getFullYear()} RentRide Technologies Inc. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-6">
             <Link to="/rental-plans" className="hover:text-slate-300 transition-colors">Rental Policies</Link>
-            <Link to="/categories" className="hover:text-slate-300 transition-colors">Fleet Directory</Link>
-            <Link to="/vendor/register" className="hover:text-slate-300 transition-colors">Host Guidelines</Link>
-            <Link to="/explore" className="hover:text-slate-300 transition-colors">Live Fleets</Link>
+            <Link to="/categories" className="hover:text-slate-300 transition-colors">Fleet Categories</Link>
+            <Link to="/vendor/register" className="hover:text-slate-300 transition-colors">Vendor Terms</Link>
+            <Link to="/explore" className="hover:text-slate-300 transition-colors">Search Hubs</Link>
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   PowerOff,
   Power
 } from 'lucide-react';
+import { getVehiclePrimaryImage } from '../../features/vehicles/utils/vehicleImageResolver';
 
 export const AdminVehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -263,11 +264,11 @@ export const AdminVehiclesPage = () => {
             >
               <div className="space-y-3">
                 {/* Image & Badges */}
-                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900">
+                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center p-3 border border-slate-800">
                   <img
-                    src={v.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'}
-                    alt={v.model}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    src={getVehiclePrimaryImage(v) || v.images?.[0]?.url}
+                    alt={`${v.brand} ${v.model}`}
+                    className="w-full h-full object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 flex gap-1.5">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-black/60 text-white backdrop-blur-md border border-white/20">
@@ -401,11 +402,11 @@ export const AdminVehiclesPage = () => {
             </button>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 flex items-center justify-center p-1 border border-slate-800">
                 <img
-                  src={selectedVehicle.vehicle.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'}
+                  src={getVehiclePrimaryImage(selectedVehicle.vehicle) || selectedVehicle.vehicle.images?.[0]?.url}
                   alt={selectedVehicle.vehicle.model}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain filter drop-shadow-sm"
                 />
               </div>
               <div>

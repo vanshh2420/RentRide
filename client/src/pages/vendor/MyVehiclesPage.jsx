@@ -17,8 +17,10 @@ import {
   MapPin,
   IndianRupee,
   Layers,
-  CalendarCheck
+  CalendarCheck,
+  ShieldCheck
 } from 'lucide-react';
+import { getVehiclePrimaryImage, getVehicleImageMeta } from '../../features/vehicles/utils/vehicleImageResolver';
 
 export const MyVehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -205,14 +207,20 @@ export const MyVehiclesPage = () => {
               key={v._id}
               className="glass-panel rounded-3xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-subtle flex flex-col justify-between"
             >
-              <div className="relative aspect-[16/10] bg-slate-100 dark:bg-slate-800">
+              <div className="relative aspect-[16/10] bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-3 border-b border-slate-100 dark:border-slate-800">
                 <img
-                  src={v.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'}
-                  alt={v.model}
-                  className="w-full h-full object-cover"
+                  src={getVehiclePrimaryImage(v) || v.images?.[0]?.url}
+                  alt={`${v.brand} ${v.model}`}
+                  className="w-full h-full object-contain filter drop-shadow-sm"
                 />
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-bold">
-                  {v.registrationNumber}
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <span className="px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-mono font-bold">
+                    {v.registrationNumber}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
+                    <ShieldCheck className="w-3 h-3" />
+                    Verified Spec
+                  </span>
                 </div>
                 <div className="absolute top-3 right-3">
                   <select

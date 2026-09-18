@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Standalone RentRide R + Road Monogram Mark (Scalable Vector) -->
+  <rect x="14" y="10" width="16" height="80" rx="4" fill="#0f172a"/>
+  <path d="M28 10H58C73.464 10 86 22.536 86 38C86 53.464 73.464 66 58 66H28V50H56C62.6274 50 68 44.6274 68 38C68 31.3726 62.6274 26 56 26H28V10Z" fill="#0f172a"/>
+  <path d="M42 90L55 48H68L88 90H42Z" fill="#2557eb"/>
+  <line x1="62" y1="52" x2="61" y2="62" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="60" y1="67" x2="57.5" y2="82" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="56.5" y1="86" x2="55.5" y2="90" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

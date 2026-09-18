@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Car, ShieldCheck, Clock, Award, Phone, Mail, MapPin, Sparkles, CheckCircle2, Store, ArrowUpRight } from 'lucide-react';
+import { RentRideLogo } from '../components/common/RentRideLogo';
 
 export const Footer = () => {
   return (
@@ -14,20 +15,7 @@ export const Footer = () => {
           
           {/* Col 1: Brand & Guarantee */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-sky-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
-                <Car className="w-5 h-5 stroke-[2.4]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-heading text-2xl font-black tracking-tight text-white flex items-center gap-1">
-                  RentRide
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-                </span>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 -mt-1">
-                  Smart Mobility Marketplace
-                </span>
-              </div>
-            </Link>
+            <RentRideLogo size="lg" inverted={true} />
 
             <p className="text-slate-400 text-xs sm:text-sm max-w-sm leading-relaxed">
               Central India's leading multi-vendor vehicle rental marketplace. Book verified scooters, motorcycles, hatchbacks, and SUVs with guaranteed zero overlap and transparent pricing.

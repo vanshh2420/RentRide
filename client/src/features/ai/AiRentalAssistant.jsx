@@ -18,6 +18,7 @@ import {
   Car
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { getVehiclePrimaryImage } from '../vehicles/utils/vehicleImageResolver';
 
 export const AiRentalAssistant = () => {
   const navigate = useNavigate();
@@ -190,11 +191,11 @@ export const AiRentalAssistant = () => {
                           className="p-3 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-800 flex items-center justify-between gap-3 shadow-subtle hover:border-brand-400 transition-all"
                         >
                           <div className="flex items-center gap-2.5 overflow-hidden">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center p-0.5 border border-slate-200/50 dark:border-slate-700">
                               <img
-                                src={v.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=300&q=80'}
-                                alt={v.model}
-                                className="w-full h-full object-cover"
+                                src={getVehiclePrimaryImage(v) || v.images?.[0]?.url}
+                                alt={`${v.brand} ${v.model}`}
+                                className="w-full h-full object-contain filter drop-shadow-xs"
                               />
                             </div>
                             <div className="truncate">

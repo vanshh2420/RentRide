@@ -6,6 +6,7 @@ import { CityAutocomplete } from '../../components/common/CityAutocomplete';
 import { vehicleApi } from '../../services/vehicleApi';
 import { categoryApi } from '../../services/categoryApi';
 import { VehicleCard } from '../../features/vehicles/VehicleCard';
+import { CategorySection } from '../../features/vehicles/CategorySection';
 import { 
   Car, 
   Bike, 
@@ -84,7 +85,7 @@ export const HomePage = () => {
       slug: 'electric-scooters',
       name: 'Electric Scooters',
       type: 'two_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/ather-450x.jpg',
       description: 'Silent, instant torque city commuters. 100% green transit.',
       startingRate: 'From ₹65/hr',
       count: '8+ Models'
@@ -94,7 +95,7 @@ export const HomePage = () => {
       slug: 'bikes',
       name: 'Cruiser & Sports Bikes',
       type: 'two_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/royal-enfield-hunter-350.jpg',
       description: 'High-torque touring cruisers and high-speed highway machines.',
       startingRate: 'From ₹90/hr',
       count: '12+ Models'
@@ -104,7 +105,7 @@ export const HomePage = () => {
       slug: 'scooters',
       name: 'Daily City Scooters',
       type: 'two_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/honda-activa-6g.jpg',
       description: 'Nimble automatic scooters perfect for market errands & college.',
       startingRate: 'From ₹55/hr',
       count: '6+ Models'
@@ -114,7 +115,7 @@ export const HomePage = () => {
       slug: 'hatchbacks',
       name: 'Compact Hatchbacks',
       type: 'four_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/maruti-suzuki-swift.jpg',
       description: 'Fuel-efficient, easy-parking 5-seaters for family & work commutes.',
       startingRate: 'From ₹180/hr',
       count: '14+ Models'
@@ -124,7 +125,7 @@ export const HomePage = () => {
       slug: 'sedans',
       name: 'Executive Sedans',
       type: 'four_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/skoda-slavia.png',
       description: 'Supreme boot space, premium legroom, and effortless highway cruising.',
       startingRate: 'From ₹240/hr',
       count: '10+ Models'
@@ -134,7 +135,7 @@ export const HomePage = () => {
       slug: 'suvs',
       name: 'Prime SUVs & 7-Seaters',
       type: 'four_wheeler',
-      iconUrl: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=800&q=80',
+      iconUrl: '/vehicles/mahindra-thar.jpg',
       description: 'High ground clearance and commanding road presence for expeditions.',
       startingRate: 'From ₹350/hr',
       count: '9+ Models'
@@ -525,88 +526,9 @@ export const HomePage = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 3. EXPLORE CATEGORIES                                                     */}
+      {/* 3. EXPLORE BY CATEGORY                                                    */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200/80 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider mb-2">
-              <Layers className="w-3.5 h-3.5 text-accent-500" />
-              <span>Fleet Classifications</span>
-            </div>
-            <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-              Explore Categories
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Choose the exact class designed for your journey style.
-            </p>
-          </div>
-
-          <Link
-            to="/categories"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400"
-          >
-            <span>All Categories</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.slice(0, 6).map((cat) => {
-            const isTwoWheeler = cat.type === 'two_wheeler';
-
-            return (
-              <Link
-                key={cat._id || cat.slug}
-                to={`/explore?category=${cat.slug || cat._id}`}
-                className="group relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-subtle hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={cat.iconUrl || (isTwoWheeler
-                        ? 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80'
-                        : 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80')}
-                      alt={cat.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    
-                    {/* Pill Badge */}
-                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white font-mono text-[10px] font-extrabold flex items-center gap-1 border border-white/10">
-                      {isTwoWheeler ? <Bike className="w-3 h-3 text-sky-400" /> : <Car className="w-3 h-3 text-amber-400" />}
-                      <span>{isTwoWheeler ? 'TWO-WHEELER' : 'FOUR-WHEELER'}</span>
-                    </div>
-
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-slate-200 text-[10px] font-bold">
-                      {cat.count || 'Verified Fleet'}
-                    </div>
-                  </div>
-
-                  <div className="p-5 space-y-2">
-                    <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      {cat.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {cat.description || 'Verified vehicles available for flexible rental.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-5 pt-0 flex items-center justify-between text-xs font-bold border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
-                    {cat.startingRate || 'Transparent Rates'}
-                  </span>
-                  <span className="text-brand-600 dark:text-brand-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    <span>Explore Fleet</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      <CategorySection />
 
       {/* ========================================================================= */}
       {/* 4. POPULAR VEHICLES IN SELECTED CITY                                      */}

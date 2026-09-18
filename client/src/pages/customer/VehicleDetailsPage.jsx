@@ -24,10 +24,18 @@ import {
   AlertCircle,
   Sparkles,
   Gauge,
-  Navigation
+  Navigation,
+  ChevronLeft,
+  ChevronRight,
+  CameraOff
 } from 'lucide-react';
 import { MapView } from '../../components/common/MapView';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
+import { 
+  getVehicleGallery, 
+  getVehiclePrimaryImage, 
+  getVehicleImageMeta 
+} from '../../features/vehicles/utils/vehicleImageResolver';
 import { cn } from '../../utils/cn';
 
 export const VehicleDetailsPage = () => {
@@ -86,11 +94,24 @@ export const VehicleDetailsPage = () => {
     );
   }
 
-  const images = vehicle.images?.length > 0 ? vehicle.images : [
-    { url: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80' }
-  ];
-
+  const galleryImages = getVehicleGallery(vehicle);
+  const primaryFallback = getVehiclePrimaryImage(vehicle);
+  const imageMeta = getVehicleImageMeta(vehicle);
   const isElectric = vehicle.fuelType === 'electric';
+
+  // Ensure selectedImage index is within bounds
+  const currentImageIdx = Math.min(selectedImage, Math.max(0, galleryImages.length - 1));
+  const activeImage = galleryImages[currentImageIdx] || (primaryFallback ? { url: primaryFallback, label: 'Model Reference' } : null);
+
+  const handlePrevImage = () => {
+    if (galleryImages.length <= 1) return;
+    setSelectedImage((prev) => (prev > 0 ? prev - 1 : galleryImages.length - 1));
+  };
+
+  const handleNextImage = () => {
+    if (galleryImages.length <= 1) return;
+    setSelectedImage((prev) => (prev < galleryImages.length - 1 ? prev + 1 : 0));
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -108,17 +129,27 @@ export const VehicleDetailsPage = () => {
         <div className="lg:col-span-7 xl:col-span-8 space-y-8">
           
           {/* Main Showcase Image & Thumbnails */}
-          <div className="space-y-3">
-            <div className="relative aspect-[16/10] rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-800 shadow-card">
-              <img
-                src={getOptimizedImageUrl(images[selectedImage]?.url || images[0].url, 'detail')}
-                alt={`${vehicle.brand} ${vehicle.model}`}
-                className="w-full h-full object-cover"
-              />
+          <div className="space-y-4">
+            <div className="relative aspect-[16/10] sm:aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100/70 to-slate-200/80 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-card flex items-center justify-center p-4 sm:p-8">
+              {activeImage?.url ? (
+                <img
+                  src={getOptimizedImageUrl(activeImage.url, 'detail')}
+                  alt={`${vehicle.brand} ${vehicle.model} - ${activeImage.label || 'Showcase'}`}
+                  className="w-full h-full object-contain filter drop-shadow-lg transition-all duration-300"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center p-8 text-slate-400">
+                  <CameraOff className="w-12 h-12 mb-3 opacity-40 text-slate-500" />
+                  <span className="text-base font-bold text-slate-700 dark:text-slate-200">Vehicle Image In Verification</span>
+                  <span className="text-xs text-slate-400 mt-1 max-w-sm">
+                    Exact photo for {vehicle.brand} {vehicle.model} is being verified to guarantee 100% accuracy.
+                  </span>
+                </div>
+              )}
               
               {/* Overlay Badges */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-xs font-mono font-bold uppercase tracking-wider border border-white/10 shadow-xs">
+              <div className="absolute top-4 left-4 flex items-center gap-2 z-10 pointer-events-none">
+                <span className="px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md text-white text-xs font-mono font-bold uppercase tracking-wider border border-white/10 shadow-xs">
                   {vehicle.registrationNumber}
                 </span>
                 {isElectric && (
@@ -129,32 +160,68 @@ export const VehicleDetailsPage = () => {
                 )}
               </div>
 
-              <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{vehicle.catalogId ? 'Verified Fleet' : 'Partner Verified'}</span>
+              <div className="absolute top-4 right-4 flex items-center gap-2 z-10 pointer-events-none">
+                <div className="px-3 py-1.5 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{imageMeta.label}</span>
+                </div>
               </div>
+
+              {/* Angle Label & Source Badge */}
+              {activeImage?.label && (
+                <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
+                  <span className="px-3 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md text-white text-xs font-semibold border border-white/10 shadow-xs">
+                    {activeImage.label}
+                  </span>
+                </div>
+              )}
+
+              {/* Prev / Next Navigation Arrows */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrevImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-white flex items-center justify-center shadow-md hover:scale-105 transition-all z-20"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-white flex items-center justify-center shadow-md hover:scale-105 transition-all z-20"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
+            {galleryImages.length > 1 && (
+              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                {galleryImages.map((img, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setSelectedImage(idx)}
                     className={cn(
-                      "w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0",
-                      selectedImage === idx
-                        ? "border-brand-600 scale-105 shadow-md ring-2 ring-brand-400/20"
-                        : "border-transparent opacity-70 hover:opacity-100"
+                      "w-24 h-18 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 relative group/thumb bg-slate-100 dark:bg-slate-800",
+                      currentImageIdx === idx
+                        ? "border-brand-600 scale-105 shadow-md ring-2 ring-brand-500/20"
+                        : "border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100"
                     )}
                   >
                     <img
                       src={getOptimizedImageUrl(img.url, 'thumbnail')}
-                      alt="Thumbnail"
-                      className="w-full h-full object-cover"
+                      alt={img.label || `View ${idx + 1}`}
+                      className="w-full h-full object-contain p-1"
                     />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-end p-1 text-[9px] text-white font-medium truncate">
+                      {img.label}
+                    </div>
                   </button>
                 ))}
               </div>

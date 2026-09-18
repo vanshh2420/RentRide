@@ -21,6 +21,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { RentRideLogo } from '../components/common/RentRideLogo';
 
 export const CustomerNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -101,20 +102,7 @@ export const CustomerNavbar = () => {
           <div className="flex items-center justify-between h-17 sm:h-18">
             
             {/* LEFT: Brand Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-sky-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
-                <Car className="w-5 h-5 stroke-[2.4]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-heading text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
-                  RentRide
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
-                </span>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 -mt-1">
-                  Smart Mobility
-                </span>
-              </div>
-            </Link>
+            <RentRideLogo />
 
             {/* CENTER: Navigation Links */}
             <div className="hidden md:flex items-center space-x-1 lg:space-x-1.5">

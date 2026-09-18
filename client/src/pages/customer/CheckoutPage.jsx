@@ -25,6 +25,7 @@ import {
   Zap,
   Sparkles
 } from 'lucide-react';
+import { getVehiclePrimaryImage } from '../../features/vehicles/utils/vehicleImageResolver';
 import { cn } from '../../utils/cn';
 
 export const CheckoutPage = () => {
@@ -254,11 +255,11 @@ export const CheckoutPage = () => {
           
           {/* Vehicle Showcase Card */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle flex flex-col sm:flex-row items-center gap-5">
-            <div className="relative w-full sm:w-48 aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+            <div className="relative w-full sm:w-48 aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 flex items-center justify-center p-2 border border-slate-100 dark:border-slate-800">
               <img
-                src={vehicle.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'}
-                alt={vehicle.model}
-                className="w-full h-full object-cover"
+                src={getVehiclePrimaryImage(vehicle) || vehicle.images?.[0]?.url}
+                alt={`${vehicle.brand} ${vehicle.model}`}
+                className="w-full h-full object-contain filter drop-shadow-sm"
               />
               <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-bold">
                 {vehicle.registrationNumber}

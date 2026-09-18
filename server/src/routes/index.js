@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Router } from 'express';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import authRoutes from './auth.routes.js';
@@ -21,16 +22,30 @@ const router = Router();
 
 // Health Check Endpoint
 router.get('/health', (req, res) => {
-  return res.status(200).json(
+  const stateMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  const dbState = mongoose.connection.readyState;
+  const isHealthy = dbState === 1;
+
+  return res.status(isHealthy ? 200 : 503).json(
     new ApiResponse(
-      200,
+      isHealthy ? 200 : 503,
       {
-        status: 'UP',
+        status: isHealthy ? 'UP' : 'DEGRADED',
         service: 'RentRide API Server',
+        database: {
+          status: stateMap[dbState] || 'unknown',
+          host: mongoose.connection.host || 'unknown',
+          name: mongoose.connection.name || 'rentride'
+        },
         timestamp: new Date().toISOString(),
         uptime: `${Math.floor(process.uptime())}s`
       },
-      'RentRide Backend Service is running healthy'
+      isHealthy ? 'RentRide Backend Service is running healthy' : 'Database connection unavailable'
     )
   );
 });

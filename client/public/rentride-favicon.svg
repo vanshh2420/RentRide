@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- RentRide High-Contrast Favicon Emblem: R + Perspective Road -->
+  <rect width="100" height="100" rx="26" fill="#090e17"/>
+  <!-- Geometric Solid R Stem in White -->
+  <rect x="20" y="18" width="14" height="64" rx="4" fill="#ffffff"/>
+  <!-- Geometric R Upper Bowl in White -->
+  <path d="M32 18H58C71.2548 18 82 28.7452 82 42C82 55.2548 71.2548 66 58 66H32V52H56C61.5228 52 66 47.5228 66 42C66 36.4772 61.5228 32 56 32H32V18Z" fill="#ffffff"/>
+  <!-- Perspective Mobility Road Leg in Vibrant Cobalt -->
+  <path d="M43 82L55 48H67L82 82H43Z" fill="#2557eb"/>
+  <!-- White Highway Centerline Dashes -->
+  <line x1="61.5" y1="52" x2="60.5" y2="62" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <line x1="59.5" y1="67" x2="57" y2="80" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

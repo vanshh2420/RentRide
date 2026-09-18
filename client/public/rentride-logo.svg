@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- RentRide Complete Brand Logo: R+Road Emblem + Wordmark -->
+  <g transform="translate(6, 6) scale(0.68)">
+    <rect width="100" height="100" rx="26" fill="#090e17"/>
+    <rect x="20" y="18" width="14" height="64" rx="4" fill="#ffffff"/>
+    <path d="M32 18H58C71.2548 18 82 28.7452 82 42C82 55.2548 71.2548 66 58 66H32V52H56C61.5228 52 66 47.5228 66 42C66 36.4772 61.5228 32 56 32H32V18Z" fill="#ffffff"/>
+    <path d="M43 82L55 48H67L82 82H43Z" fill="#2557eb"/>
+    <line x1="61.5" y1="52" x2="60.5" y2="62" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+    <line x1="59.5" y1="67" x2="57" y2="80" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="88" y="45" font-family="Outfit, Inter, sans-serif" font-weight="900" font-size="32" fill="#0f172a" letter-spacing="-0.8">RentRide</text>
+  <circle cx="225" cy="42" r="3.5" fill="#2557eb"/>
+  <text x="89" y="62" font-family="Inter, sans-serif" font-weight="800" font-size="9.5" fill="#64748b" letter-spacing="2">SMART MOBILITY</text>
+</svg>

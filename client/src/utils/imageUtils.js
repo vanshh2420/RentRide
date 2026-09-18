@@ -3,17 +3,14 @@
  * Formats URLs with dynamic width, auto-format, auto-quality, and face/smart cropping.
  */
 
-const FALLBACK_VEHICLE_IMAGE = 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80';
-
-/**
- * Generate an optimized responsive image URL
- * @param {string} url - Source image URL (Cloudinary, Unsplash, or generic)
- * @param {'thumbnail'|'card'|'detail'|'raw'} sizeVariant - Target size preset
- * @returns {string} Optimized image URL
- */
 export function getOptimizedImageUrl(url, sizeVariant = 'card') {
   if (!url || typeof url !== 'string') {
-    return FALLBACK_VEHICLE_IMAGE;
+    return '';
+  }
+
+  // If local vehicle asset, return as-is
+  if (url.startsWith('/vehicles/') || url.startsWith('/')) {
+    return url;
   }
 
   // Dimension presets

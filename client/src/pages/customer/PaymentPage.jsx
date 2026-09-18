@@ -23,6 +23,7 @@ import {
   KeyRound
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { getVehiclePrimaryImage } from '../../features/vehicles/utils/vehicleImageResolver';
 
 export const PaymentPage = () => {
   const { id: bookingId } = useParams();
@@ -109,7 +110,7 @@ export const PaymentPage = () => {
         currency,
         name: 'RentRide Marketplace',
         description: `Rental Booking #${booking.bookingNumber}`,
-        image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=200&q=80',
+        image: getVehiclePrimaryImage(booking?.vehicleId) || '',
         order_id: orderId,
         prefill: {
           name: user?.name || 'Customer',
@@ -231,11 +232,11 @@ export const PaymentPage = () => {
         {/* Vehicle & Trip Summary Card */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-card space-y-5">
           <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-            <div className="w-20 h-14 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+            <div className="w-20 h-14 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center p-1 border border-slate-100 dark:border-slate-800">
               <img
-                src={v?.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80'}
+                src={getVehiclePrimaryImage(v) || v?.images?.[0]?.url}
                 alt={v?.model || 'Vehicle'}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain filter drop-shadow-sm"
               />
             </div>
             <div>
@@ -470,11 +471,11 @@ export const PaymentPage = () => {
             </h3>
 
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="w-14 h-11 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+              <div className="w-16 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center p-1 border border-slate-100 dark:border-slate-800">
                 <img
-                  src={booking?.vehicleId?.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80'}
+                  src={getVehiclePrimaryImage(booking?.vehicleId) || booking?.vehicleId?.images?.[0]?.url}
                   alt="Vehicle"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain filter drop-shadow-sm"
                 />
               </div>
               <div>

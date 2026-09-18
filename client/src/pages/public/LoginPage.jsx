@@ -2,6 +2,7 @@ import React from 'react';
 import { LoginForm } from '../../features/auth/LoginForm';
 import { Car, ShieldCheck, Zap, Star, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RentRideLogo } from '../../components/common/RentRideLogo';
 
 export const LoginPage = () => {
   return (
@@ -15,14 +16,7 @@ export const LoginPage = () => {
 
           {/* Top Brand Tag */}
           <div className="relative z-10 space-y-4">
-            <Link to="/" className="inline-flex items-center space-x-2.5 group">
-              <div className="w-10 h-10 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
-                <Car className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <span className="font-heading text-2xl font-black tracking-tight text-white">
-                RentRide
-              </span>
-            </Link>
+            <RentRideLogo size="lg" showTagline={false} inverted={true} />
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold uppercase tracking-wide border border-emerald-500/30">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

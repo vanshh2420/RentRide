@@ -10,21 +10,22 @@ import {
   ShieldCheck,
   Heart,
   Gauge,
-  Sparkles
+  Sparkles,
+  CameraOff
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
+import { getVehiclePrimaryImage, getVehicleImageMeta } from './utils/vehicleImageResolver';
 import { cn } from '../../utils/cn';
 
 export const VehicleCard = ({ vehicle, className }) => {
   const [isLiked, setIsLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (!vehicle) return null;
 
-  const rawImage =
-    vehicle.images?.find((img) => img.isPrimary)?.url ||
-    vehicle.images?.[0]?.url ||
-    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80';
-  const primaryImage = getOptimizedImageUrl(rawImage, 'card');
+  const resolvedImage = getVehiclePrimaryImage(vehicle);
+  const primaryImage = resolvedImage ? getOptimizedImageUrl(resolvedImage, 'card') : null;
+  const imageMeta = getVehicleImageMeta(vehicle);
 
   const isElectric = vehicle.fuelType === 'electric';
   const isAvailable = vehicle.status === 'AVAILABLE';
@@ -35,21 +36,29 @@ export const VehicleCard = ({ vehicle, className }) => {
       "group relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-subtle hover:shadow-card hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-300 flex flex-col justify-between overflow-hidden",
       className
     )}>
-      {/* Media & Badges Showcase */}
+      {/* Studio Media & Badges Showcase */}
       <Link 
         to={`/vehicles/${vehicle._id}`}
-        className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 block cursor-pointer"
+        className="relative aspect-[16/11] w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100/70 to-slate-200/60 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-slate-900 block cursor-pointer"
         aria-label={`View details for ${vehicle.brand} ${vehicle.model}`}
       >
-        <img
-          src={primaryImage}
-          alt={`${vehicle.brand} ${vehicle.model}`}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-          loading="lazy"
-        />
-
-        {/* Ambient bottom shade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25 pointer-events-none" />
+        {primaryImage && !imageError ? (
+          <div className="w-full h-full flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+            <img
+              src={primaryImage}
+              alt={`${vehicle.brand} ${vehicle.model}`}
+              onError={() => setImageError(true)}
+              className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-[1.03] transition-transform duration-300 ease-out"
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-100 dark:bg-slate-800 text-slate-400">
+            <CameraOff className="w-8 h-8 mb-2 opacity-50" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Vehicle Image Unavailable</span>
+            <span className="text-[11px] text-slate-400 mt-1 font-medium">{vehicle.brand} {vehicle.model}</span>
+          </div>
+        )}
 
         {/* Top Floating Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
@@ -68,8 +77,8 @@ export const VehicleCard = ({ vehicle, className }) => {
               </span>
             )}
 
-            {vehicle.catalogId && (
-              <span className="hidden xl:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-600 text-white text-[10px] font-bold shadow-xs">
+            {imageMeta.status === 'VERIFIED' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
                 <ShieldCheck className="w-3 h-3" />
                 Verified
               </span>

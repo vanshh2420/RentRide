@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { aiApi } from '../../services/aiApi';
 import { Sparkles, Star, Zap, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
+import { getVehiclePrimaryImage } from '../vehicles/utils/vehicleImageResolver';
 
 export const AiRecommendationsCarousel = ({ categoryId, city, title = "Smart AI Recommendations" }) => {
   const [recommendations, setRecommendations] = useState([]);
@@ -72,11 +73,11 @@ export const AiRecommendationsCarousel = ({ categoryId, city, title = "Smart AI 
             >
               <div className="space-y-3">
                 {/* Image & Match Badge */}
-                <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-3">
                   <img
-                    src={v.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80'}
-                    alt={v.model}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src={getVehiclePrimaryImage(v) || v.images?.[0]?.url}
+                    alt={`${v.brand} ${v.model}`}
+                    className="w-full h-full object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold flex items-center gap-1 border border-emerald-500/30 shadow-md">
                     <Sparkles className="w-2.5 h-2.5 text-emerald-400" />

@@ -714,24 +714,76 @@ export const autoSeedIfEmpty = async () => {
 
 export const autoSeedCategoriesIfEmpty = autoSeedIfEmpty;
 
-const attachListeners = () => {
+export const MONGO_OPTIONS = {
+  autoIndex: true,
+  maxPoolSize: 10,
+  minPoolSize: 0,
+  maxIdleTimeMS: 30000,
+  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 10000,
+  connectTimeoutMS: 10000,
+  heartbeatFrequencyMS: 10000,
+  family: 4,
+  retryWrites: true,
+  retryReads: true
+};
+
+let listenersAttached = false;
+let isReconnecting = false;
+let reconnectTimeout = null;
+
+export const attachDBListeners = () => {
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  mongoose.connection.on('connected', () => {
+    logger.info('MongoDB connection established.');
+  });
+
   mongoose.connection.on('error', (err) => {
-    logger.error('MongoDB runtime connection error:', err.message || err);
+    logger.error(`MongoDB runtime connection error: ${err.message || err}`);
   });
 
   mongoose.connection.on('disconnected', () => {
-    logger.warn('MongoDB connection lost. Reconnecting...');
+    logger.warn('MongoDB connection lost. Triggering auto-reconnect watchdog...');
+    scheduleAutoReconnect();
   });
 
   mongoose.connection.on('reconnected', () => {
-    logger.info('MongoDB connection re-established.');
+    logger.info('MongoDB connection successfully re-established.');
   });
+};
+
+const scheduleAutoReconnect = () => {
+  if (isReconnecting) return;
+  clearTimeout(reconnectTimeout);
+  reconnectTimeout = setTimeout(async () => {
+    if (mongoose.connection.readyState === 0 && ENV.MONGODB_URI) {
+      try {
+        isReconnecting = true;
+        logger.info('Watchdog: Reconnecting to primary MongoDB Atlas cluster...');
+        await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
+        logger.info('Watchdog: Successfully restored MongoDB connection.');
+      } catch (err) {
+        logger.error(`Watchdog: Reconnect attempt failed (${err.message}). Retrying in 5s...`);
+        scheduleAutoReconnect();
+      } finally {
+        isReconnecting = false;
+      }
+    }
+  }, 4000);
 };
 
 /**
  * Connect to MongoDB database with event listeners and sanitized logging
  */
 export const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  attachDBListeners();
+
   if (!ENV.MONGODB_URI) {
     const errorMsg = 'MongoDB connection URI is not configured in environment variables (MONGODB_URI or MONGO_URI).';
     logger.error(errorMsg);
@@ -739,28 +791,24 @@ export const connectDB = async () => {
   }
 
   // 1. Primary MongoDB Connection (Atlas / Configured URI) with robust timeout & retries
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   let lastError = null;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       logger.info(`Connecting to primary MongoDB (attempt ${attempt}/${maxAttempts})...`);
-      const conn = await mongoose.connect(ENV.MONGODB_URI, {
-        autoIndex: true,
-        serverSelectionTimeoutMS: 15000,
-      });
+      const conn = await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
 
       const host = conn.connection.host || 'remote-cluster';
       const dbName = conn.connection.name || 'rentride';
       logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
       await autoSeedIfEmpty();
-      attachListeners();
       return conn;
     } catch (error) {
       lastError = error;
       if (attempt < maxAttempts) {
-        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 2s...`);
-        await new Promise((res) => setTimeout(res, 2000));
+        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 2.5s...`);
+        await new Promise((res) => setTimeout(res, 2500));
       } else {
         logger.error(`Primary MongoDB connection failed after ${maxAttempts} attempts: ${error.message}`);
       }
@@ -792,7 +840,6 @@ export const connectDB = async () => {
 
       logger.info(`MongoDB Connected to fallback local storage instance [Path: ${storageDir} | URI: ${fallbackUri}]`);
       await autoSeedIfEmpty();
-      attachListeners();
       return conn;
     } catch (fallbackError) {
       logger.error(`Fallback persistent MongoDB failed: ${fallbackError.message}`);
@@ -809,8 +856,10 @@ export const connectDB = async () => {
 };
 
 export const disconnectDB = async () => {
+  clearTimeout(reconnectTimeout);
   await mongoose.disconnect();
   if (memoryServerInstance) {
     await memoryServerInstance.stop();
   }
 };
+

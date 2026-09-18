@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles
 } from 'lucide-react';
+import { RentRideLogo } from '../components/common/RentRideLogo';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,19 +39,7 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
-              <Car className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-heading text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-600 via-sky-600 to-accent-500 bg-clip-text text-transparent">
-                RentRide
-              </span>
-              <span className="text-[10px] font-medium tracking-wider uppercase text-slate-500 -mt-1">
-                Vehicle Marketplace
-              </span>
-            </div>
-          </Link>
+          <RentRideLogo />
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-2">

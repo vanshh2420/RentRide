@@ -25,6 +25,7 @@ import {
   KeyRound,
   ShieldCheck
 } from 'lucide-react';
+import { getVehiclePrimaryImage } from '../../features/vehicles/utils/vehicleImageResolver';
 import { cn } from '../../utils/cn';
 
 export const MyBookingsPage = () => {
@@ -143,11 +144,11 @@ export const MyBookingsPage = () => {
             >
               {/* Left Vehicle & Trip Info */}
               <div className="flex items-start sm:items-center gap-4 w-full md:w-auto">
-                <div className="w-24 sm:w-28 aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                <div className="w-24 sm:w-28 aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center p-1.5 border border-slate-100 dark:border-slate-800">
                   <img
-                    src={b.vehicleId?.images?.[0]?.url || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80'}
-                    alt="Vehicle"
-                    className="w-full h-full object-cover"
+                    src={getVehiclePrimaryImage(b.vehicleId) || b.vehicleId?.images?.[0]?.url}
+                    alt={`${b.vehicleId?.brand || ''} ${b.vehicleId?.model || 'Vehicle'}`}
+                    className="w-full h-full object-contain filter drop-shadow-sm"
                   />
                 </div>
 

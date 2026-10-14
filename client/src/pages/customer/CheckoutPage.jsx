@@ -35,9 +35,11 @@ export const CheckoutPage = () => {
   const { user } = useSelector((state) => state.auth);
 
   // Form State
+  const initialPlan = searchParams.get('plan') || 'HOURLY';
+  const initialHours = initialPlan === '12_HOURS' ? 12 : initialPlan === '24_HOURS' ? 24 : (Number(searchParams.get('hours')) || 3);
   const [vehicle, setVehicle] = useState(null);
-  const [rentalPlan, setRentalPlan] = useState(searchParams.get('plan') || 'HOURLY');
-  const [hours, setHours] = useState(Number(searchParams.get('hours')) || 3);
+  const [rentalPlan, setRentalPlan] = useState(initialPlan);
+  const [hours, setHours] = useState(initialHours);
   
   // Set default start time 2 hours from current time in local timezone
   const defaultStartTime = toLocalISOString(new Date(Date.now() + 2 * 60 * 60 * 1000));
@@ -57,6 +59,28 @@ export const CheckoutPage = () => {
   const [isBooking, setIsBooking] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const getHourlyError = (val) => {
+    if (val === '' || val === null || val === undefined) {
+      return 'Please enter the number of hours';
+    }
+    const num = Number(val);
+    if (isNaN(num)) {
+      return 'Please enter a valid numeric value';
+    }
+    if (!Number.isInteger(num)) {
+      return 'Please enter whole hours (no decimals)';
+    }
+    if (num < 1) {
+      return 'Duration must be at least 1 hour';
+    }
+    if (num > 24) {
+      return 'Maximum hourly rental duration is 24 hours';
+    }
+    return '';
+  };
+
+  const hoursError = rentalPlan === 'HOURLY' ? getHourlyError(hours) : '';
+
   useEffect(() => {
     fetchVehicle();
   }, [id]);
@@ -70,6 +94,32 @@ export const CheckoutPage = () => {
       checkLiveAvailabilityAndPrice();
     }
   }, [vehicle, rentalPlan, startDateTime, endDateTime, appliedCoupon]);
+
+  const handlePlanChange = (newPlan) => {
+    setRentalPlan(newPlan);
+    if (newPlan === '12_HOURS') {
+      setHours(12);
+    } else if (newPlan === '24_HOURS') {
+      setHours(24);
+    } else if (newPlan === 'HOURLY') {
+      setHours((prev) => (prev === 12 || prev === 24 ? 3 : (prev || 3)));
+    }
+  };
+
+  const handleHoursChange = (rawVal) => {
+    if (rawVal === '') {
+      setHours('');
+      return;
+    }
+    const parsed = Number(rawVal);
+    if (isNaN(parsed)) {
+      setHours(rawVal);
+    } else if (!Number.isInteger(parsed)) {
+      setHours(parsed);
+    } else {
+      setHours(parseInt(rawVal, 10));
+    }
+  };
 
   const fetchVehicle = async () => {
     setVehicleLoading(true);
@@ -86,22 +136,38 @@ export const CheckoutPage = () => {
   const computeEndDateTime = () => {
     if (!startDateTime) return;
     const start = new Date(startDateTime);
-    let durationHours = hours;
+    let durationHours = Number(hours);
 
     if (rentalPlan === '12_HOURS') durationHours = 12;
     if (rentalPlan === '24_HOURS') durationHours = 24;
+
+    if (isNaN(durationHours) || durationHours <= 0 || (rentalPlan === 'HOURLY' && getHourlyError(hours))) {
+      setEndDateTime('');
+      return;
+    }
 
     const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
     setEndDateTime(toLocalISOString(end));
   };
 
   const checkLiveAvailabilityAndPrice = async () => {
+    if (rentalPlan === 'HOURLY' && getHourlyError(hours)) {
+      setIsAvailable(false);
+      setAvailabilityReason(getHourlyError(hours));
+      setPriceData(null);
+      return;
+    }
+    if (!endDateTime) return;
+
     setIsCheckingPrice(true);
     setErrorMessage('');
     try {
+      const effectiveHours = rentalPlan === '12_HOURS' ? 12 : rentalPlan === '24_HOURS' ? 24 : Number(hours);
       const payload = {
         vehicleId: id,
         rentalPlan,
+        duration: effectiveHours,
+        durationHours: effectiveHours,
         startDateTime: toApiISOString(startDateTime),
         endDateTime: toApiISOString(endDateTime),
         couponCode: appliedCoupon?.code || undefined
@@ -139,6 +205,10 @@ export const CheckoutPage = () => {
   };
 
   const handleCreateBooking = async () => {
+    if (rentalPlan === 'HOURLY' && getHourlyError(hours)) {
+      setErrorMessage(getHourlyError(hours));
+      return;
+    }
     if (!isAvailable) {
       setErrorMessage('Selected time slot is unavailable. Please select another time.');
       return;
@@ -148,9 +218,12 @@ export const CheckoutPage = () => {
     setErrorMessage('');
 
     try {
+      const effectiveHours = rentalPlan === '12_HOURS' ? 12 : rentalPlan === '24_HOURS' ? 24 : Number(hours);
       const payload = {
         vehicleId: id,
         rentalPlan,
+        duration: effectiveHours,
+        durationHours: effectiveHours,
         startDateTime: toApiISOString(startDateTime),
         endDateTime: toApiISOString(endDateTime),
         couponCode: appliedCoupon?.code || undefined
@@ -297,7 +370,7 @@ export const CheckoutPage = () => {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setRentalPlan(p.id)}
+                  onClick={() => handlePlanChange(p.id)}
                   className={cn(
                     "p-3.5 rounded-2xl border text-center transition-all",
                     rentalPlan === p.id
@@ -330,39 +403,123 @@ export const CheckoutPage = () => {
                 </div>
               </div>
 
-              {rentalPlan === 'HOURLY' ? (
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Rental Duration (Hours)
-                  </label>
-                  <select
-                    value={hours}
-                    onChange={(e) => setHours(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none cursor-pointer"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
-                      <option key={h} value={h}>
-                        {h} {h === 1 ? 'Hour' : 'Hours'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Estimated Return Time
-                  </label>
+              {rentalPlan === 'HOURLY' && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <label htmlFor="checkout-duration-hours" className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Number of hours
+                    </label>
+                    {hoursError ? (
+                      <span className="text-[11px] font-bold text-rose-500">{hoursError}</span>
+                    ) : (
+                      <span className="font-extrabold text-brand-600 dark:text-brand-400">
+                        {hours} {Number(hours) === 1 ? 'Hour' : 'Hours'}
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
-                    <Clock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
                     <input
-                      type="text"
-                      disabled
-                      value={endDateTime ? new Date(endDateTime).toLocaleString() : ''}
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                      id="checkout-duration-hours"
+                      type="number"
+                      min="1"
+                      max="24"
+                      step="1"
+                      value={hours}
+                      onChange={(e) => handleHoursChange(e.target.value)}
+                      placeholder="Enter hours (e.g. 6)"
+                      className={cn(
+                        "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all",
+                        hoursError
+                          ? "border-rose-500 ring-1 ring-rose-500/20"
+                          : "border-slate-200 dark:border-slate-700"
+                      )}
                     />
+                    <span className="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
+                      hours
+                    </span>
+                  </div>
+
+                  {/* Quick select options */}
+                  <div className="space-y-1 pt-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Quick select:
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[1, 2, 4, 6, 8, 12].map((quickHr) => {
+                        const isSelected = Number(hours) === quickHr;
+                        return (
+                          <button
+                            key={quickHr}
+                            type="button"
+                            onClick={() => handleHoursChange(quickHr)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-xl text-xs font-bold transition-all",
+                              isSelected
+                                ? "bg-brand-600 text-white shadow-xs ring-2 ring-brand-500/30"
+                                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300"
+                            )}
+                          >
+                            {quickHr} {quickHr === 1 ? 'hr' : 'hrs'}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
+
+              {rentalPlan === '12_HOURS' && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Duration
+                    </label>
+                    <span className="font-extrabold text-amber-600 dark:text-amber-400">
+                      Fixed Plan
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-amber-500" /> 12-Hour Day Pack
+                    </span>
+                    <span className="font-heading font-black text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-200/60 dark:border-amber-800/50">
+                      12 hours
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {rentalPlan === '24_HOURS' && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Duration
+                    </label>
+                    <span className="font-extrabold text-purple-600 dark:text-purple-400">
+                      Fixed Plan
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-purple-500" /> 24-Hour Escape
+                    </span>
+                    <span className="font-heading font-black text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-lg border border-purple-200/60 dark:border-purple-800/50">
+                      24 hours
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Estimated Return Time Display */}
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 text-xs">
+              <span className="text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-brand-600" />
+                <span>Estimated Return Time:</span>
+              </span>
+              <span className="font-bold text-slate-900 dark:text-white font-mono">
+                {endDateTime ? new Date(endDateTime).toLocaleString() : '—'}
+              </span>
             </div>
 
             {/* Live slot lock availability pill */}
@@ -466,7 +623,7 @@ export const CheckoutPage = () => {
             <PriceBreakdownCard
               priceBreakdown={priceData}
               rentalPlan={rentalPlan}
-              durationHours={hours}
+              durationHours={rentalPlan === '12_HOURS' ? 12 : rentalPlan === '24_HOURS' ? 24 : Number(hours)}
               appliedCoupon={appliedCoupon}
             />
 
@@ -475,7 +632,7 @@ export const CheckoutPage = () => {
               <button
                 type="button"
                 onClick={handleCreateBooking}
-                disabled={!isAvailable || isBooking || isCheckingPrice}
+                disabled={!isAvailable || isBooking || isCheckingPrice || Boolean(hoursError)}
                 className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-500 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-md hover:shadow-hover transition-all duration-200 flex items-center justify-center gap-2"
               >
                 {isBooking ? (

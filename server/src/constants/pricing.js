@@ -2,11 +2,49 @@ export const PRICING_DEFAULTS = {
   PLATFORM_COMMISSION_RATE: 0.12, // 12%
   PLATFORM_FEE_RATE: 0.05,        // 5% convenience fee
   GST_RATE: 0.18,                 // 18% GST
-  WEEKEND_SURGE_MULTIPLIER: 1.15, // 15% weekend surge
-  MAX_SURGE_MULTIPLIER: 1.50,     // Max dynamic surge
+  WEEKEND_SURGE_MULTIPLIER: 1.15, // Legacy weekend surge fallback
+  MAX_SURGE_MULTIPLIER: 1.35,     // Bounded upper surge limit
   SECURITY_DEPOSIT: {
     TWO_WHEELER: 1000,
     FOUR_WHEELER: 3000,
     LUXURY: 7500
   }
 };
+
+export const DYNAMIC_PRICING_CONFIG = {
+  MIN_DYNAMIC_MULTIPLIER: 0.90,
+  MAX_DYNAMIC_MULTIPLIER: 1.35,
+  BASE_MULTIPLIER: 1.00,
+  FACTORS: {
+    // Demand / Scarcity Factors
+    LOW_UTILIZATION_THRESHOLD: 0.30,
+    LOW_UTILIZATION_DELTA: -0.07,
+    MODERATE_SCARCITY_THRESHOLD: 0.70,
+    MODERATE_SCARCITY_DELTA: 0.08,
+    HIGH_SCARCITY_THRESHOLD: 0.85,
+    HIGH_SCARCITY_DELTA: 0.15,
+
+    // Day / Time Factors
+    OFF_PEAK_WEEKDAY_DAYS: [2, 3], // Tuesday (2), Wednesday (3)
+    OFF_PEAK_WEEKDAY_DELTA: -0.03,
+    FRIDAY_DELTA: 0.10,
+    SATURDAY_DELTA: 0.15,
+    SUNDAY_DELTA: 0.10,
+
+    // Location / Hub Factors
+    CITY_FACTORS: {
+      indore: 0.03,
+      bhopal: 0.00,
+      gwalior: 0.00
+    },
+    DEFAULT_CITY_DELTA: 0.00
+  },
+  BADGES: {
+    VALUE_SAVER: 'VALUE_SAVER',
+    STANDARD_RATE: 'STANDARD_RATE',
+    WEEKEND_SURGE: 'WEEKEND_SURGE',
+    MODERATE_SURGE: 'MODERATE_SURGE',
+    HIGH_DEMAND_SURGE: 'HIGH_DEMAND_SURGE'
+  }
+};
+

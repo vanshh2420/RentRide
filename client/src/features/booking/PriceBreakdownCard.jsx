@@ -6,14 +6,28 @@ export const PriceBreakdownCard = ({ priceBreakdown, rentalPlan, durationHours, 
 
   const {
     basePrice,
+    dynamicMultiplier,
     surgeMultiplier,
+    dynamicAdjustment,
+    appliedFactors,
     couponDiscount,
+    discountAmount,
     subtotal,
     platformFee,
     taxAmount,
+    gstAmount,
     securityDeposit,
-    totalAmount
+    totalAmount,
+    totalPayable
   } = priceBreakdown;
+
+  const effectiveMultiplier = dynamicMultiplier || surgeMultiplier || 1.0;
+  const effectiveAdjustment = dynamicAdjustment !== undefined
+    ? dynamicAdjustment
+    : Math.round(basePrice * (effectiveMultiplier - 1));
+  const effectiveDiscount = couponDiscount !== undefined ? couponDiscount : (discountAmount || 0);
+  const effectiveTax = taxAmount !== undefined ? taxAmount : (gstAmount || 0);
+  const effectiveTotal = totalAmount !== undefined ? totalAmount : (totalPayable || 0);
 
   return (
     <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-card space-y-5">
@@ -34,21 +48,42 @@ export const PriceBreakdownCard = ({ priceBreakdown, rentalPlan, durationHours, 
           <span className="font-bold text-slate-900 dark:text-white">₹{basePrice}</span>
         </div>
 
-        {surgeMultiplier > 1.0 && (
-          <div className="flex justify-between text-amber-600 dark:text-amber-400 font-semibold">
+        {/* Dynamic Discount Path (0.90x - 0.99x) */}
+        {effectiveMultiplier < 1.0 && (
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50/60 dark:bg-emerald-950/30 p-2 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
             <span className="flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Weekend Dynamic Surge ({Math.round((surgeMultiplier - 1) * 100)}%)
+              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              <span>
+                {appliedFactors && appliedFactors.length > 0
+                  ? appliedFactors.join(' • ')
+                  : `Value Saver Discount (${Math.round((1 - effectiveMultiplier) * 100)}% off)`}
+              </span>
             </span>
-            <span>+₹{Math.round(basePrice * (surgeMultiplier - 1))}</span>
+            <span className="font-bold">-₹{Math.abs(effectiveAdjustment)}</span>
           </div>
         )}
 
-        {couponDiscount > 0 && (
+        {/* Dynamic Surge Path (1.01x - 1.35x) */}
+        {effectiveMultiplier > 1.0 && (
+          <div className="flex justify-between text-amber-600 dark:text-amber-400 font-semibold bg-amber-50/50 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200/50 dark:border-amber-800/30">
+            <span className="flex items-center gap-1">
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span>
+                {appliedFactors && appliedFactors.length > 0
+                  ? appliedFactors.join(' • ')
+                  : `Demand Dynamic Surge (+${Math.round((effectiveMultiplier - 1) * 100)}%)`}
+              </span>
+            </span>
+            <span className="font-bold">+₹{Math.abs(effectiveAdjustment)}</span>
+          </div>
+        )}
+
+        {effectiveDiscount > 0 && (
           <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40">
             <span className="flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5" /> Coupon Discount {appliedCoupon?.code ? `(${appliedCoupon.code})` : ''}
             </span>
-            <span>-₹{couponDiscount}</span>
+            <span>-₹{effectiveDiscount}</span>
           </div>
         )}
 
@@ -64,7 +99,7 @@ export const PriceBreakdownCard = ({ priceBreakdown, rentalPlan, durationHours, 
 
         <div className="flex justify-between text-slate-500">
           <span>GST / Government Taxes (18%)</span>
-          <span>₹{taxAmount}</span>
+          <span>₹{effectiveTax}</span>
         </div>
 
         {/* Highlighted Security Deposit */}
@@ -93,7 +128,7 @@ export const PriceBreakdownCard = ({ priceBreakdown, rentalPlan, durationHours, 
           <span className="text-[10px] text-slate-500">Inclusive of deposit & taxes</span>
         </div>
         <div className="font-heading text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          ₹{totalAmount}
+          ₹{effectiveTotal}
         </div>
       </div>
 

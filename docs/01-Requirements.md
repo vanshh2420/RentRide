@@ -431,11 +431,11 @@ Urban commuting, regional leisure travel, and gig-economy logistics increasingly
 * **Evidence:** [`ai-service/app/services/demand_forecaster.py`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/ai-service/app/services/demand_forecaster.py), [`server/src/services/ai.service.js`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/server/src/services/ai.service.js), [`client/src/features/ai/DemandForecastWidget.jsx`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/client/src/features/ai/DemandForecastWidget.jsx)
 
 #### AI-003 — Dynamic Pricing Multiplier Engine
-* **Description:** The system shall calculate optimal surge multipliers (0.90x to 1.35x) considering high fleet utilization (>75%), weekend surges (+15%), and metro demand factors.
-* **Actor:** Vendor / System
-* **Priority:** Medium
+* **Description:** The system shall calculate optimal, explainable rate multipliers strictly bounded between 0.90x and 1.35x based on a deterministic multi-factor model: low fleet utilization (<30%: -7%) and off-peak weekdays (Tue/Wed: -3%) for value saver pricing (0.90x–0.99x); fleet scarcity (70–84%: +8%, ≥85%: +15%); weekend surges (Fri/Sun: +10%, Sat: +15%); and operational city hub adjustments (Indore: +3%, Bhopal/Gwalior: 0%). The backend (`PricingService.calculatePriceBreakdown`) acts as the single authoritative source of truth for all final payable amounts, while the AI service provides real-time multiplier recommendations with seamless deterministic fallback if offline.
+* **Actor:** Vendor / Customer / System
+* **Priority:** High
 * **Status:** Implemented
-* **Evidence:** [`ai-service/app/services/dynamic_pricing_engine.py`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/ai-service/app/services/dynamic_pricing_engine.py), [`server/src/services/ai.service.js`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/server/src/services/ai.service.js)
+* **Evidence:** [`ai-service/app/services/dynamic_pricing_engine.py`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/ai-service/app/services/dynamic_pricing_engine.py), [`server/src/services/pricing.service.js`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/server/src/services/pricing.service.js), [`server/src/constants/pricing.js`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/server/src/constants/pricing.js), [`server/src/services/ai.service.js`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/server/src/services/ai.service.js), [`client/src/features/booking/PriceBreakdownCard.jsx`](file:///c:/Users/vansh/OneDrive/Desktop/Project/RentRide/client/src/features/booking/PriceBreakdownCard.jsx)
 
 #### AI-004 — AI-Driven Behavioral Personalized Offers
 * **Description:** The system shall recommend tailored promotional discount offers based on customer rental signals (frequently rented vehicle category, duration, average spending value). Server-side pricing and coupon validation services remain strictly authoritative over discount eligibility and financial rules.

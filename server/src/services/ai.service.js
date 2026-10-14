@@ -4,6 +4,7 @@ import { Booking } from '../models/booking.model.js';
 import { User } from '../models/user.model.js';
 import { Category } from '../models/category.model.js';
 import { ApiError } from '../utils/ApiError.js';
+import { PricingService } from './pricing.service.js';
 
 let rawAiUrl = (process.env.AI_SERVICE_URL || 'http://localhost:8000').trim();
 if (!rawAiUrl.endsWith('/api/v1')) {
@@ -193,36 +194,59 @@ export class AiService {
   }
 
   /**
-   * Real-time Dynamic Pricing Multiplier
+   * Real-time Dynamic Pricing Multiplier Quote
+   * Queries FastAPI engine, seamlessly falling back to deterministic PricingService
    */
   static async getDynamicPricing({ baseRate, rentalDate, categorySlug = 'general', city = 'Indore' }) {
+    const rateNum = Math.max(0, Number(baseRate) || 0);
+    let utilization = 0.50;
+    try {
+      utilization = await PricingService.getFleetUtilization(city);
+    } catch {
+      utilization = 0.50;
+    }
+
     try {
       const response = await aiClient.post('/dynamic-pricing', {
-        baseRate: Number(baseRate),
+        baseRate: rateNum,
         rentalDate: rentalDate || new Date().toISOString(),
         categorySlug,
         city,
-        fleetUtilization: 0.65
+        fleetUtilization: utilization
       });
 
       if (response.data?.pricing) {
         return response.data.pricing;
       }
     } catch (err) {
-      console.warn('[AI Service Warning] Falling back to standard pricing:', err.message);
+      console.warn('[AI Service Warning] Falling back to canonical pricing calculation:', err.message);
     }
 
-    const d = new Date(rentalDate || Date.now());
-    const isWeekend = d.getDay() === 5 || d.getDay() === 6;
-    const mult = isWeekend ? 1.15 : 1.00;
+    const {
+      dynamicMultiplier,
+      surgeBadge,
+      appliedFactors,
+      potentialRevenueUpliftPercent,
+      potentialSavingsPercent
+    } = PricingService.calculateDynamicMultiplier({
+      rentalDate,
+      city,
+      fleetUtilization: utilization
+    });
+
+    const adjustedRate = Math.round(rateNum * dynamicMultiplier * 100) / 100;
+    const dynamicAdjustment = Math.round((adjustedRate - rateNum) * 100) / 100;
 
     return {
-      baseRate: Number(baseRate),
-      multiplier: mult,
-      adjustedRate: Math.round(Number(baseRate) * mult),
-      surgeBadge: isWeekend ? 'WEEKEND_SURGE' : 'STANDARD_RATE',
-      appliedFactors: isWeekend ? ['Weekend Surge (+15%)'] : ['Standard Base Rate'],
-      potentialRevenueUpliftPercent: isWeekend ? 15 : 0
+      baseRate: rateNum,
+      multiplier: dynamicMultiplier,
+      dynamicMultiplier,
+      dynamicAdjustment,
+      adjustedRate,
+      surgeBadge,
+      appliedFactors,
+      potentialRevenueUpliftPercent,
+      potentialSavingsPercent
     };
   }
 

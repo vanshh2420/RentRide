@@ -4,7 +4,6 @@ import { AiRecommendationsCarousel } from '../../features/ai/AiRecommendationsCa
 import { PersonalizedOfferBanner } from '../../features/ai/PersonalizedOfferBanner';
 import { CityAutocomplete } from '../../components/common/CityAutocomplete';
 import { vehicleApi } from '../../services/vehicleApi';
-import { categoryApi } from '../../services/categoryApi';
 import { VehicleCard } from '../../features/vehicles/VehicleCard';
 import { CategorySection } from '../../features/vehicles/CategorySection';
 import { 
@@ -50,7 +49,6 @@ export const HomePage = () => {
 
   // Dynamic Data States
   const [popularVehicles, setPopularVehicles] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
   // City Explorer Data
@@ -78,69 +76,6 @@ export const HomePage = () => {
     }
   ];
 
-  // Default Categories Fallback
-  const defaultCategories = [
-    {
-      _id: 'electric-scooters',
-      slug: 'electric-scooters',
-      name: 'Electric Scooters',
-      type: 'two_wheeler',
-      iconUrl: '/vehicles/ather-450x.jpg',
-      description: 'Silent, instant torque city commuters. 100% green transit.',
-      startingRate: 'From ₹65/hr',
-      count: '8+ Models'
-    },
-    {
-      _id: 'bikes',
-      slug: 'bikes',
-      name: 'Cruiser & Sports Bikes',
-      type: 'two_wheeler',
-      iconUrl: '/vehicles/royal-enfield-hunter-350.jpg',
-      description: 'High-torque touring cruisers and high-speed highway machines.',
-      startingRate: 'From ₹90/hr',
-      count: '12+ Models'
-    },
-    {
-      _id: 'scooters',
-      slug: 'scooters',
-      name: 'Daily City Scooters',
-      type: 'two_wheeler',
-      iconUrl: '/vehicles/honda-activa-6g.jpg',
-      description: 'Nimble automatic scooters perfect for market errands & college.',
-      startingRate: 'From ₹55/hr',
-      count: '6+ Models'
-    },
-    {
-      _id: 'hatchbacks',
-      slug: 'hatchbacks',
-      name: 'Compact Hatchbacks',
-      type: 'four_wheeler',
-      iconUrl: '/vehicles/maruti-suzuki-swift.jpg',
-      description: 'Fuel-efficient, easy-parking 5-seaters for family & work commutes.',
-      startingRate: 'From ₹180/hr',
-      count: '14+ Models'
-    },
-    {
-      _id: 'sedans',
-      slug: 'sedans',
-      name: 'Executive Sedans',
-      type: 'four_wheeler',
-      iconUrl: '/vehicles/skoda-slavia.png',
-      description: 'Supreme boot space, premium legroom, and effortless highway cruising.',
-      startingRate: 'From ₹240/hr',
-      count: '10+ Models'
-    },
-    {
-      _id: 'suvs',
-      slug: 'suvs',
-      name: 'Prime SUVs & 7-Seaters',
-      type: 'four_wheeler',
-      iconUrl: '/vehicles/mahindra-thar.jpg',
-      description: 'High ground clearance and commanding road presence for expeditions.',
-      startingRate: 'From ₹350/hr',
-      count: '9+ Models'
-    }
-  ];
 
   // Customer Reviews Data
   const customerReviews = [
@@ -177,20 +112,10 @@ export const HomePage = () => {
   const fetchInitialData = async () => {
     setIsLoadingVehicles(true);
     try {
-      const [vehiclesRes, categoriesRes] = await Promise.all([
-        vehicleApi.searchVehicles({ limit: 4, city: selectedCity }),
-        categoryApi.getAllCategories()
-      ]);
-
+      const vehiclesRes = await vehicleApi.searchVehicles({ limit: 4, city: selectedCity });
       setPopularVehicles(vehiclesRes.data?.vehicles || []);
-      if (categoriesRes.data?.categories?.length > 0) {
-        setCategories(categoriesRes.data.categories);
-      } else {
-        setCategories(defaultCategories);
-      }
     } catch (err) {
       console.error('Failed to load homepage data', err);
-      setCategories(defaultCategories);
     } finally {
       setIsLoadingVehicles(false);
     }

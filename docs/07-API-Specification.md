@@ -280,14 +280,23 @@ All endpoints adhere to standardized JSON response structures defined in [`serve
       "isAvailable": true,
       "priceBreakdown": {
         "basePrice": 1200,
-        "surgeMultiplier": 1.15,
-        "subtotal": 1380,
-        "platformFee": 69,
-        "taxAmount": 260.82,
+        "baseRentalAmount": 1200,
+        "dynamicMultiplier": 0.95,
+        "surgeMultiplier": 0.95,
+        "dynamicAdjustment": -60,
+        "adjustedRentalAmount": 1140,
+        "surgeBadge": "VALUE_SAVER",
+        "appliedFactors": [
+          "Value Saver Off-Peak Discount (-3%)"
+        ],
+        "couponDiscount": 0,
+        "subtotal": 1140,
+        "platformFee": 57,
+        "taxAmount": 205,
         "securityDeposit": 1000,
-        "totalAmount": 2709.82,
-        "vendorPayout": 2214.4,
-        "platformCommission": 495.42
+        "totalAmount": 2402,
+        "vendorPayout": 1003,
+        "platformCommission": 137
       }
     },
     "message": "Vehicle is available",

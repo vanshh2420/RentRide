@@ -107,11 +107,13 @@ export const ExplorePage = () => {
         setSelectedMapVehicle(res.data.vehicles[0]);
       }
     } catch (err) {
-      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || err.message === 'canceled' || signal?.aborted) return;
       console.error('Error fetching vehicles:', err);
       setVehicles([]);
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+      }
     }
   };
 

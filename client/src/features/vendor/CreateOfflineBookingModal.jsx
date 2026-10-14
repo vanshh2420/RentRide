@@ -84,24 +84,66 @@ export const CreateOfflineBookingModal = ({ isOpen, onClose, vehicles = [], defa
     }
   }, [vehicleId, rentalPlan, startDateTime, endDateTime]);
 
+  const handlePlanChange = (newPlan) => {
+    setRentalPlan(newPlan);
+    if (newPlan === '12_HOURS') {
+      setHours(12);
+    } else if (newPlan === '24_HOURS') {
+      setHours(24);
+    } else if (newPlan === 'HOURLY') {
+      setHours((prev) => (prev === 12 || prev === 24 ? 3 : (prev || 3)));
+    }
+  };
+
+  const handleHoursChange = (rawVal) => {
+    if (rawVal === '') {
+      setHours('');
+      return;
+    }
+    const parsed = Number(rawVal);
+    if (isNaN(parsed)) {
+      setHours(rawVal);
+    } else if (!Number.isInteger(parsed)) {
+      setHours(parsed);
+    } else {
+      setHours(parseInt(rawVal, 10));
+    }
+  };
+
   const computeEndDateTime = () => {
     if (!startDateTime) return;
     const start = new Date(startDateTime);
-    let durationHours = hours;
+    let durationHours = Number(hours);
     if (rentalPlan === '12_HOURS') durationHours = 12;
     if (rentalPlan === '24_HOURS') durationHours = 24;
+
+    if (isNaN(durationHours) || durationHours <= 0) {
+      setEndDateTime('');
+      return;
+    }
 
     const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
     setEndDateTime(toLocalISOString(end));
   };
 
   const checkLiveSlot = async () => {
+    const effectiveHours = rentalPlan === '12_HOURS' ? 12 : rentalPlan === '24_HOURS' ? 24 : Number(hours);
+    if (rentalPlan === 'HOURLY' && (isNaN(effectiveHours) || effectiveHours < 1 || effectiveHours > 24 || !Number.isInteger(effectiveHours))) {
+      setIsAvailable(false);
+      setConflictReason('Please enter a valid duration (1-24 hours)');
+      setPriceData(null);
+      return;
+    }
+    if (!endDateTime) return;
+
     setIsCheckingAvailability(true);
     setErrorMessage('');
     try {
       const res = await bookingApi.checkAvailability({
         vehicleId,
         rentalPlan,
+        duration: effectiveHours,
+        durationHours: effectiveHours,
         startDateTime: toApiISOString(startDateTime),
         endDateTime: toApiISOString(endDateTime)
       });
@@ -138,9 +180,12 @@ export const CreateOfflineBookingModal = ({ isOpen, onClose, vehicles = [], defa
     setErrorMessage('');
 
     try {
+      const effectiveHours = rentalPlan === '12_HOURS' ? 12 : rentalPlan === '24_HOURS' ? 24 : Number(hours);
       const payload = {
         vehicleId,
         rentalPlan,
+        duration: effectiveHours,
+        durationHours: effectiveHours,
         startDateTime: toApiISOString(startDateTime),
         endDateTime: toApiISOString(endDateTime),
         offlineCustomer: {
@@ -229,7 +274,7 @@ export const CreateOfflineBookingModal = ({ isOpen, onClose, vehicles = [], defa
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setRentalPlan(p.id)}
+                onClick={() => handlePlanChange(p.id)}
                 className={`py-2 px-3 rounded-xl border text-center font-bold transition-all ${
                   rentalPlan === p.id
                     ? 'border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shadow-sm'
@@ -242,19 +287,57 @@ export const CreateOfflineBookingModal = ({ isOpen, onClose, vehicles = [], defa
           </div>
 
           {rentalPlan === 'HOURLY' && (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Duration (Hours):</span>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="1"
-                  max="11"
-                  value={hours}
-                  onChange={(e) => setHours(Number(e.target.value))}
-                  className="w-36 accent-brand-600"
-                />
-                <span className="font-bold text-brand-600 text-sm">{hours} hrs</span>
+            <div className="space-y-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-xs text-slate-600 dark:text-slate-300">Number of hours:</span>
+                <span className="font-bold text-brand-600 text-xs">{hours} {Number(hours) === 1 ? 'hr' : 'hrs'}</span>
               </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  max="24"
+                  step="1"
+                  value={hours}
+                  onChange={(e) => handleHoursChange(e.target.value)}
+                  placeholder="e.g. 6"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+                <span className="absolute right-3 top-2 text-xs text-slate-400 font-semibold pointer-events-none">
+                  hours
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block w-full">Quick select:</span>
+                {[1, 2, 4, 6, 8, 12].map((quickHr) => (
+                  <button
+                    key={quickHr}
+                    type="button"
+                    onClick={() => handleHoursChange(quickHr)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      Number(hours) === quickHr
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    {quickHr} {quickHr === 1 ? 'hr' : 'hrs'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {rentalPlan === '12_HOURS' && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+              <span className="font-semibold text-xs text-slate-700 dark:text-slate-300">Duration (Fixed):</span>
+              <span className="font-extrabold text-amber-600 dark:text-amber-400 text-xs">12 Hours</span>
+            </div>
+          )}
+
+          {rentalPlan === '24_HOURS' && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
+              <span className="font-semibold text-xs text-slate-700 dark:text-slate-300">Duration (Fixed):</span>
+              <span className="font-extrabold text-purple-600 dark:text-purple-400 text-xs">24 Hours</span>
             </div>
           )}
 

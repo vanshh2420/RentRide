@@ -561,7 +561,7 @@ graph LR
 | **Interactive Map Hub View** | `[PARTIAL]` | `client/src/pages/customer/ExplorePage.jsx` *(Visual simulation canvas with active slot pins; non-tile map)* |
 | **Vehicle Specifications & Details** | `[IMPLEMENTED]` | `client/src/pages/customer/VehicleDetailsPage.jsx`, `client/src/features/vehicles/VehicleCard.jsx`, `server/src/models/vehicle.model.js` |
 | **Anti-Collision Availability** | `[IMPLEMENTED]` | `server/src/services/booking.service.js` (`isVehicleAvailable`), `server/src/routes/booking.routes.js` |
-| **Server-Side Price Calculation** | `[IMPLEMENTED]` | `server/src/services/pricing.service.js` (`calculatePriceBreakdown`), `client/src/features/booking/PriceBreakdownCard.jsx` |
+| **Server-Side Price Calculation** | `[IMPLEMENTED]` | `server/src/services/pricing.service.js` (`calculatePriceBreakdown`), `server/src/constants/pricing.js`, `client/src/features/booking/PriceBreakdownCard.jsx`, `client/src/features/pricing/FareCalculator.jsx` *(Zero-trust authoritative server calculation covering base rental, dynamic multiplier, coupons, fees, GST, deposits, and vendor payouts)* |
 | **Coupon Discount Engine** | `[IMPLEMENTED]` | `server/src/services/coupon.service.js`, `client/src/features/admin/CouponManager.jsx`, `server/src/models/coupon.model.js` |
 | **Online Reservation & Hold Lock** | `[IMPLEMENTED]` | `client/src/pages/customer/CheckoutPage.jsx`, `server/src/services/booking.service.js` (`createOnlineBooking`) |
 | **Razorpay Payment Gateway** | `[IMPLEMENTED]` | `client/src/pages/customer/PaymentPage.jsx`, `server/src/services/payment.service.js`, `server/src/config/razorpay.js` |
@@ -579,6 +579,6 @@ graph LR
 | **In-App Notification Feed** | `[IMPLEMENTED]` | `client/src/features/notifications/NotificationDropdown.jsx`, `server/src/services/notification.service.js`, `server/src/models/notification.model.js` |
 | **AI Recommendation Engine** | `[IMPLEMENTED]` | `ai-service/app/services/recommendation_engine.py`, `server/src/services/ai.service.js`, `client/src/features/ai/AiRecommendationsCarousel.jsx` |
 | **7-Day Demand Forecasting** | `[IMPLEMENTED]` | `ai-service/app/services/demand_forecaster.py`, `server/src/services/ai.service.js`, `client/src/features/ai/DemandForecastWidget.jsx` |
-| **Dynamic Pricing Engine** | `[IMPLEMENTED]` | `ai-service/app/services/dynamic_pricing_engine.py`, `server/src/services/ai.service.js`, `server/src/routes/ai.routes.js` |
+| **Dynamic Pricing Engine** | `[IMPLEMENTED]` | `ai-service/app/services/dynamic_pricing_engine.py`, `ai-service/app/core/constants.py`, `server/src/services/pricing.service.js`, `server/src/services/ai.service.js`, `server/src/constants/pricing.js` *(Canonical 0.90x–1.35x rate multiplier with explainable low-demand discounts, fleet scarcity surges, weekend/day surges, and city factors)* |
 | **Resilient Database & Seeding** | `[IMPLEMENTED]` | `server/src/config/db.js` (`MongoMemoryServer` fallback + auto-seeding across Indore, Bhopal, Gwalior) |
 | **Cloudinary Media Storage** | `[IMPLEMENTED]` | `server/src/config/cloudinary.js`, `server/src/middleware/upload.middleware.js` |

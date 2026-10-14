@@ -422,8 +422,13 @@ export const VendorDashboardPage = ({ defaultWalkinOpen = false }) => {
                         <div className="font-heading font-extrabold text-emerald-600">
                           ₹{b.priceBreakdown?.vendorPayout}
                         </div>
-                        <div className="text-[10px] text-slate-400">
-                          Gross: ₹{b.priceBreakdown?.subtotal}
+                        <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <span>Gross: ₹{b.priceBreakdown?.subtotal}</span>
+                          {(b.priceBreakdown?.dynamicMultiplier || b.priceBreakdown?.surgeMultiplier) && (b.priceBreakdown?.dynamicMultiplier || b.priceBreakdown?.surgeMultiplier) !== 1.0 && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                              {(b.priceBreakdown?.dynamicMultiplier || b.priceBreakdown?.surgeMultiplier)}x
+                            </span>
+                          )}
                         </div>
                       </td>
 

@@ -714,68 +714,148 @@ export const autoSeedIfEmpty = async () => {
 
 export const autoSeedCategoriesIfEmpty = autoSeedIfEmpty;
 
+/**
+ * Sanitize MongoDB URI to prevent logging sensitive user/password credentials
+ */
+export const sanitizeMongoUri = (uri) => {
+  if (!uri || typeof uri !== 'string') return '';
+  return uri.replace(/\/\/([^:@]+):([^@]+)@/, '//$1:****@');
+};
+
 export const MONGO_OPTIONS = {
   autoIndex: true,
   maxPoolSize: 10,
   minPoolSize: 0,
   maxIdleTimeMS: 30000,
   socketTimeoutMS: 45000,
-  serverSelectionTimeoutMS: 10000,
+  serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 10000,
   heartbeatFrequencyMS: 10000,
-  family: 4,
   retryWrites: true,
   retryReads: true
 };
 
+// Reconnection & connection state management
 let listenersAttached = false;
+let isInitialConnecting = false;
+let hasEverConnected = false;
 let isReconnecting = false;
 let reconnectTimeout = null;
+let reconnectAttempts = 0;
+const MAX_RUNTIME_RECONNECT_ATTEMPTS = 10;
+
+/**
+ * Distinguish fatal startup/Atlas IP errors from transient network issues
+ */
+const isAtlasIpAccessError = (err) => {
+  if (!err) return false;
+  let full = (err.message || '') + (err.stack || '');
+  if (err.reason?.servers) {
+    for (const [, desc] of err.reason.servers) {
+      if (desc?.error?.message) {
+        full += ' ' + desc.error.message;
+      }
+    }
+  }
+  return full.includes('SSL alert number 80') || full.includes('tlsv1 alert internal error');
+};
+
+/**
+ * Log prominent, actionable guidance when Atlas IP Access List blocks connection
+ */
+const logAtlasIpAccessGuidance = () => {
+  logger.error('================================================================================');
+  logger.error('❌ [FATAL] MongoDB Atlas Connection Rejected: IP Access List (Whitelist) Error');
+  logger.error('--------------------------------------------------------------------------------');
+  logger.error('Atlas rejected the TLS handshake (SSL alert number 80).');
+  logger.error('Your current public IP address is NOT whitelisted in MongoDB Atlas Network Access.');
+  logger.error('');
+  logger.error('EXTERNAL ACTION REQUIRED IN MONGODB ATLAS:');
+  logger.error('1. Open MongoDB Atlas Console: https://cloud.mongodb.com');
+  logger.error('2. Navigate to: Security → Network Access');
+  logger.error('3. Click "Add IP Address"');
+  logger.error('4. Choose "Allow Access From Anywhere" (0.0.0.0/0) for local development,');
+  logger.error('   OR click "Add Current IP Address".');
+  logger.error('5. Click Confirm, wait ~30 seconds for status to become "Active",');
+  logger.error('   then restart the server.');
+  logger.error('================================================================================');
+};
+
+/**
+ * Schedule runtime auto-reconnect with exponential backoff.
+ * NOTE: This is strictly for RUNTIME disconnects (after initial successful connect),
+ * NEVER during initial startup.
+ */
+const scheduleAutoReconnect = () => {
+  if (isReconnecting || isInitialConnecting || !hasEverConnected) return;
+
+  if (reconnectAttempts >= MAX_RUNTIME_RECONNECT_ATTEMPTS) {
+    logger.error(`[FATAL] MongoDB auto-reconnect failed after ${MAX_RUNTIME_RECONNECT_ATTEMPTS} attempts. Manual intervention required.`);
+    return;
+  }
+
+  clearTimeout(reconnectTimeout);
+  reconnectAttempts++;
+  const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 30000);
+
+  logger.warn(`Watchdog: MongoDB runtime disconnect detected. Scheduling reconnect attempt ${reconnectAttempts}/${MAX_RUNTIME_RECONNECT_ATTEMPTS} in ${delay}ms...`);
+
+  reconnectTimeout = setTimeout(async () => {
+    if (mongoose.connection.readyState === 0 && ENV.MONGODB_URI) {
+      try {
+        isReconnecting = true;
+        logger.info(`Watchdog: Reconnecting to primary MongoDB Atlas cluster (attempt ${reconnectAttempts}/${MAX_RUNTIME_RECONNECT_ATTEMPTS})...`);
+        await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
+        logger.info('Watchdog: Successfully restored MongoDB connection.');
+        reconnectAttempts = 0;
+      } catch (err) {
+        logger.error(`Watchdog: Reconnect attempt failed (${err.message}).`);
+        if (isAtlasIpAccessError(err)) {
+          logAtlasIpAccessGuidance();
+        }
+        scheduleAutoReconnect();
+      } finally {
+        isReconnecting = false;
+      }
+    }
+  }, delay);
+};
 
 export const attachDBListeners = () => {
   if (listenersAttached) return;
   listenersAttached = true;
 
   mongoose.connection.on('connected', () => {
+    hasEverConnected = true;
+    isReconnecting = false;
+    reconnectAttempts = 0;
     logger.info('MongoDB connection established.');
   });
 
   mongoose.connection.on('error', (err) => {
-    logger.error(`MongoDB runtime connection error: ${err.message || err}`);
+    // Only log runtime connection errors when already connected; initial connect errors are handled in connectDB
+    if (hasEverConnected && !isInitialConnecting) {
+      logger.error(`MongoDB runtime connection error: ${err.message || err}`);
+    }
   });
 
   mongoose.connection.on('disconnected', () => {
-    logger.warn('MongoDB connection lost. Triggering auto-reconnect watchdog...');
-    scheduleAutoReconnect();
+    // Only trigger runtime watchdog if server was previously connected and not in initial startup
+    if (hasEverConnected && !isInitialConnecting) {
+      logger.warn('MongoDB connection lost at runtime. Triggering controlled auto-reconnect...');
+      scheduleAutoReconnect();
+    }
   });
 
   mongoose.connection.on('reconnected', () => {
+    reconnectAttempts = 0;
     logger.info('MongoDB connection successfully re-established.');
   });
 };
 
-const scheduleAutoReconnect = () => {
-  if (isReconnecting) return;
-  clearTimeout(reconnectTimeout);
-  reconnectTimeout = setTimeout(async () => {
-    if (mongoose.connection.readyState === 0 && ENV.MONGODB_URI) {
-      try {
-        isReconnecting = true;
-        logger.info('Watchdog: Reconnecting to primary MongoDB Atlas cluster...');
-        await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
-        logger.info('Watchdog: Successfully restored MongoDB connection.');
-      } catch (err) {
-        logger.error(`Watchdog: Reconnect attempt failed (${err.message}). Retrying in 5s...`);
-        scheduleAutoReconnect();
-      } finally {
-        isReconnecting = false;
-      }
-    }
-  }, 4000);
-};
-
 /**
- * Connect to MongoDB database with event listeners and sanitized logging
+ * Connect to MongoDB database with event listeners and sanitized logging.
+ * Distinguishes startup failure from runtime disconnects.
  */
 export const connectDB = async () => {
   if (mongoose.connection.readyState === 1) {
@@ -790,29 +870,47 @@ export const connectDB = async () => {
     throw new Error(errorMsg);
   }
 
-  // 1. Primary MongoDB Connection (Atlas / Configured URI) with robust timeout & retries
-  const maxAttempts = 5;
+  isInitialConnecting = true;
+  clearTimeout(reconnectTimeout);
+  reconnectTimeout = null;
+
+  const maxAttempts = 3;
   let lastError = null;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      logger.info(`Connecting to primary MongoDB (attempt ${attempt}/${maxAttempts})...`);
-      const conn = await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
+  try {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        logger.info(`Connecting to primary MongoDB (attempt ${attempt}/${maxAttempts})...`);
+        const conn = await mongoose.connect(ENV.MONGODB_URI, MONGO_OPTIONS);
 
-      const host = conn.connection.host || 'remote-cluster';
-      const dbName = conn.connection.name || 'rentride';
-      logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
-      await autoSeedIfEmpty();
-      return conn;
-    } catch (error) {
-      lastError = error;
-      if (attempt < maxAttempts) {
-        logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in 2.5s...`);
-        await new Promise((res) => setTimeout(res, 2500));
-      } else {
-        logger.error(`Primary MongoDB connection failed after ${maxAttempts} attempts: ${error.message}`);
+        const host = conn.connection.host || 'remote-cluster';
+        const dbName = conn.connection.name || 'rentride';
+        hasEverConnected = true;
+        reconnectAttempts = 0;
+        logger.info(`MongoDB Connected successfully [Host: ${host} | Database: ${dbName}]`);
+        await autoSeedIfEmpty();
+        return conn;
+      } catch (error) {
+        lastError = error;
+
+        // If Atlas explicitly drops the TLS connection with Alert 80, fast-fail with clear guidance
+        // because retrying without updating Atlas IP Access List will never succeed.
+        if (isAtlasIpAccessError(error)) {
+          logAtlasIpAccessGuidance();
+          break;
+        }
+
+        if (attempt < maxAttempts) {
+          const retryDelay = 2000 * attempt;
+          logger.warn(`Primary MongoDB attempt ${attempt} failed (${error.message}). Retrying in ${retryDelay / 1000}s...`);
+          await new Promise((res) => setTimeout(res, retryDelay));
+        } else {
+          logger.error(`Primary MongoDB connection failed after ${maxAttempts} attempts: ${error.message}`);
+        }
       }
     }
+  } finally {
+    isInitialConnecting = false;
   }
 
   // 2. Explicit Fallback Check (Strictly disabled unless ALLOW_IN_MEMORY_DB === 'true')
@@ -838,6 +936,7 @@ export const connectDB = async () => {
         serverSelectionTimeoutMS: 5000,
       });
 
+      hasEverConnected = true;
       logger.info(`MongoDB Connected to fallback local storage instance [Path: ${storageDir} | URI: ${fallbackUri}]`);
       await autoSeedIfEmpty();
       return conn;
@@ -847,9 +946,9 @@ export const connectDB = async () => {
     }
   }
 
-  // Fail fast with clear actionable error rather than silently switching databases
+  const sanitizedUri = sanitizeMongoUri(ENV.MONGODB_URI);
   throw new Error(
-    `Failed to connect to primary MongoDB at ${ENV.MONGODB_URI.replace(/\/\/.*@/, '//<credentials>@')}. ` +
+    `Failed to connect to primary MongoDB at ${sanitizedUri}. ` +
     `Reason: ${lastError?.message || 'Connection timeout'}. ` +
     `Please verify your network connectivity or Atlas IP access list.`
   );
@@ -857,6 +956,10 @@ export const connectDB = async () => {
 
 export const disconnectDB = async () => {
   clearTimeout(reconnectTimeout);
+  reconnectTimeout = null;
+  hasEverConnected = false;
+  isInitialConnecting = false;
+  isReconnecting = false;
   await mongoose.disconnect();
   if (memoryServerInstance) {
     await memoryServerInstance.stop();
